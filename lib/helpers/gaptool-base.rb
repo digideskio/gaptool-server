@@ -31,18 +31,18 @@ module GaptoolBaseHelpers
     return @key.to_pem
   end
 
-  def gt_securitygroup(role, environment, zone)
+  def gt_securitygroup(role, environment, zone, groupname=nil)
     AWS.config(:access_key_id => $redis.hget('config', 'aws_id'), :secret_access_key => $redis.hget('config', 'aws_secret'), :ec2_endpoint => "ec2.#{zone.chop}.amazonaws.com")
     @ec2 = AWS::EC2.new
-    groupname = "#{role}-#{environment}"
+    groupname = groupname || "#{role}-#{environment}"
     default_list = [ 22 ]
     @ec2.security_groups.each do |group|
-      if group.name == "#{role}-#{environment}"
+      if group.name == groupname
         return group.id
       end
     end
     internet = ['0.0.0.0/0']
-    sg = @ec2.security_groups.create("#{role}-#{environment}")
+    sg = @ec2.security_groups.create(groupname)
     sg.authorize_ingress :tcp, 22, *internet
     return sg.id
   end

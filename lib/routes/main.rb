@@ -34,7 +34,7 @@ class GaptoolServer < Sinatra::Application
     # create shared secret to reference in /register
     @secret = (0...8).map{65.+(rand(26)).chr}.join
     data.merge!("secret" => @secret)
-    sgid = gt_securitygroup(data['role'], data['environment'], data['zone'])
+    sgid = gt_securitygroup(data['role'], data['environment'], data['zone'], data['security_group'])
     image_id = $redis.hget("amis:#{data['role']}", data['zone'].chop) || $redis.hget("amis", data['zone'].chop)
     if data['mirror']
       instance = @ec2.instances.create(
