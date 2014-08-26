@@ -16,7 +16,7 @@ group :development do
 end
 
 gem 'sinatra'
-gem 'thin'
+gem 'thin', "~> 1.5.1"
 gem 'redis'
 gem 'aws-sdk'
 gem 'net-ssh'
