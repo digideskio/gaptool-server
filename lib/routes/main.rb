@@ -14,17 +14,6 @@ class GaptoolServer < Sinatra::Application
     redishash(data).to_json
   end
 
-  get '/servicebalance/:role/:environment' do
-    runlist = balanceservices(params[:role], params[:environment])
-    unless runlist.kind_of? Hash
-      servicestopall(params[:role], params[:environment])
-      runlist.peach do |event|
-        runservice(event[:host][:hostname], params[:role], params[:environment], event[:service][:name], event[:service][:keys], 'start')
-      end
-    end
-    runlist.to_json
-  end
-
   post '/regenhosts' do
     data = JSON.parse request.body.read
     hostsgen(data['zone'])

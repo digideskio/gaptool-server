@@ -8,8 +8,5 @@ GaptoolServer.helpers NiceBytes
 require_relative 'gaptool-base'
 GaptoolServer.helpers GaptoolBaseHelpers
 
-require_relative 'services'
-GaptoolServer.helpers ServiceHelpers
-
 require_relative 'rehash'
 GaptoolServer.helpers RehashHelpers
