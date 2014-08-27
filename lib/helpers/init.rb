@@ -8,9 +8,6 @@ GaptoolServer.helpers NiceBytes
 require_relative 'gaptool-base'
 GaptoolServer.helpers GaptoolBaseHelpers
 
-require_relative 'redis'
-GaptoolServer.helpers RedisHelpers
-
 require_relative 'services'
 GaptoolServer.helpers ServiceHelpers
 
