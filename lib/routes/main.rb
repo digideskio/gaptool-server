@@ -9,17 +9,6 @@ class GaptoolServer < Sinatra::Application
     "PONG"
   end
 
-  post '/redishash' do
-    data = JSON.parse request.body.read
-    redishash(data).to_json
-  end
-
-  post '/regenhosts' do
-    data = JSON.parse request.body.read
-    hostsgen(data['zone'])
-    hosts.to_json
-  end
-
   post '/init' do
     data = JSON.parse request.body.read
     AWS.config(:access_key_id => $redis.hget('config', 'aws_id'), :secret_access_key => $redis.hget('config', 'aws_secret'), :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
