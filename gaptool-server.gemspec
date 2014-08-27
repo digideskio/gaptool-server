@@ -9,54 +9,18 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Matt Bailey", "Francesco Laurita"]
-  s.date = "2013-08-12"
+  s.date = Time.new.strftime("%Y-%m-%d")
   s.description = "gaptool-server for managing cloud resources"
-  s.email = "m@mdb.io"
-  s.executables = ["gaptool-server"]
+  s.email = "ops@gild.com"
+  s.executables = `git ls-files -- bin/*`.split("\n").map{|i| i.gsub(/^bin\//,'')}
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc"
   ]
-  s.files = [
-    ".document",
-    "Gemfile",
-    "LICENSE.txt",
-    "Procfile",
-    "README.rdoc",
-    "Rakefile",
-    "VERSION",
-    "bin/gaptool-server",
-    "config.ru",
-    "gaptool-server.gemspec",
-    "lib/app.rb",
-    "lib/helpers/gaptool-base.rb",
-    "lib/helpers/init.rb",
-    "lib/helpers/mongodb.rb",
-    "lib/helpers/nicebytes.rb",
-    "lib/helpers/partials.rb",
-    "lib/helpers/redis.rb",
-    "lib/helpers/rehash.rb",
-    "lib/helpers/services.rb",
-    "lib/models/init.rb",
-    "lib/models/user.rb",
-    "lib/public/css/common.css",
-    "lib/public/js/manifest.txt",
-    "lib/routes/init.rb",
-    "lib/routes/main.rb",
-    "lib/routes/mongodb.rb",
-    "lib/routes/redis.rb",
-    "lib/routes/rehash.rb",
-    "lib/routes/services.rb",
-    "lib/views/hosts.erb",
-    "lib/views/init.erb",
-    "setup.rb",
-    "test/helper.rb",
-    "test/test_gaptool-server.rb"
-  ]
+  s.files = s.files = `git ls-files | grep lib`.split("\n")
   s.homepage = "http://github.com/mattbailey/gaptool-server"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "2.0.5"
   s.summary = "gaptool-server for managing cloud resources"
 
   if s.respond_to? :specification_version then
