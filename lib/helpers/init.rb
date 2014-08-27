@@ -11,9 +11,6 @@ GaptoolServer.helpers GaptoolBaseHelpers
 require_relative 'redis'
 GaptoolServer.helpers RedisHelpers
 
-require_relative 'mongodb'
-GaptoolServer.helpers MongodbHelpers
-
 require_relative 'services'
 GaptoolServer.helpers ServiceHelpers
 
