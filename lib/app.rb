@@ -11,14 +11,16 @@ require 'peach'
 class GaptoolServer < Sinatra::Application
   disable :sessions
   enable  :dump_errors
-  
+
   error do
     {:result => 'error', :message => env['sinatra.error']}.to_json
   end
 
   before do
-    error 401 unless $redis.hget('users', env['HTTP_X_GAPTOOL_USER']) == env['HTTP_X_GAPTOOL_KEY']
-    error 401 unless env['HTTP_X_GAPTOOL_USER'] && env['HTTP_X_GAPTOOL_KEY']
+    if request.path_info != '/ping'
+      error 401 unless $redis.hget('users', env['HTTP_X_GAPTOOL_USER']) == env['HTTP_X_GAPTOOL_KEY']
+      error 401 unless env['HTTP_X_GAPTOOL_USER'] && env['HTTP_X_GAPTOOL_KEY']
+    end
   end
 
   helpers do

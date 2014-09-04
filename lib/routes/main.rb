@@ -5,6 +5,10 @@ class GaptoolServer < Sinatra::Application
     "You must be lost. Read the instructions."
   end
 
+  get '/ping' do
+    "PONG"
+  end
+
   post '/redishash' do
     data = JSON.parse request.body.read
     redishash(data).to_json
