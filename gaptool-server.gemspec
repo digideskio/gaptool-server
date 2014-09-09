@@ -17,7 +17,8 @@ Gem::Specification.new do |s|
     "LICENSE.txt",
     "README.rdoc"
   ]
-  s.files = s.files = `git ls-files | grep lib`.split("\n")
+  s.files = `git ls-files | grep lib`.split("\n")
+  s.files << 'config.ru'
   s.homepage = "http://github.com/mattbailey/gaptool-server"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
