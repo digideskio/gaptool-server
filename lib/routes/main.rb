@@ -82,7 +82,7 @@ class GaptoolServer < Sinatra::Application
     unless host_data
         error 403
     end
-    @instance = @ec2.instances[host_data['instance']]
+    @instance = @ec2.instances[host_data['instance_id']]
     hostname = @instance.dns_name
     $redis.del(host_key)
     @apps = []
