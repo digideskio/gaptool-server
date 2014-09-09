@@ -1,12 +1,12 @@
 # encoding: utf-8
 module GaptoolBaseHelpers
-  def hash2redis( key, hash )
+  def hash2redis(key, hash)
     hash.keys.each do |hkey|
       $redis.hset key, hkey, hash[hkey]
     end
   end
 
-  def putkey( host )
+  def putkey(host)
     @key = OpenSSL::PKey::RSA.new 2048
     @pubkey = "#{@key.ssh_type} #{[@key.to_blob].pack('m0')} GAPTOOL_GENERATED_KEY"
     ENV['SSH_AUTH_SOCK'] = ''
