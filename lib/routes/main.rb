@@ -78,7 +78,7 @@ class GaptoolServer < Sinatra::Application
     AWS.config(:access_key_id => $redis.hget('config', 'aws_id'), :secret_access_key => $redis.hget('config', 'aws_secret'), :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
     @ec2 = AWS::EC2.new
     host_key = "instance:#{data['role']}:#{data['environment']}:#{data['secret']}"
-    host_data = redis.hgetall(host_key)
+    host_data = $redis.hgetall(host_key)
     unless host_data
         error 403
     end
