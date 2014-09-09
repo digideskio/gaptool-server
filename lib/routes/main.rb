@@ -18,7 +18,8 @@ class GaptoolServer < Sinatra::Application
     data.merge!("secret" => @secret)
     security_group = data['security_group'] || $redis.hget("role:#{data['role']}", "security_group")
     sgid = gt_securitygroup(data['role'], data['environment'], data['zone'], security_group)
-    image_id = $redis.hget("amis:#{data['role']}", data['zone'].chop) || $redis.hget("amis", data['zone'].chop)
+    image_id = data['ami'].chop || $redis.hget("amis:#{data['role']}", data['zone'].chop) || $redis.hget("amis", data['zone'].chop)
+    puts data['zone']
     if data['mirror']
       instance = @ec2.instances.create(
         :image_id => image_id,
@@ -52,7 +53,12 @@ class GaptoolServer < Sinatra::Application
     instance.add_tag('Name', :value => "#{data['role']}-#{data['environment']}-#{instance.id}")
     instance.add_tag('gaptool', :value => "yes")
     # Create temporary redis entry for /register to pull the instance id
-    $redis.set("instance:#{data['role']}:#{data['environment']}:#{@secret}", instance.id)
+    # with an expire of 24h
+    host_key = "instance:#{data['role']}:#{data['environment']}:#{@secret}"
+    $redis.hmset(host_key, 'instance_id', instance.id,
+                 'chef_branch', data['chef_branch'],
+                 'chef_repo', data['chef_repo'])
+    $redis.expire(host_key, 86400)
     "{\"instance\":\"#{instance.id}\"}"
   end
 
@@ -71,9 +77,14 @@ class GaptoolServer < Sinatra::Application
     data = JSON.parse request.body.read
     AWS.config(:access_key_id => $redis.hget('config', 'aws_id'), :secret_access_key => $redis.hget('config', 'aws_secret'), :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
     @ec2 = AWS::EC2.new
-    @instance = @ec2.instances[$redis.get("instance:#{data['role']}:#{data['environment']}:#{data['secret']}")]
+    host_key = "instance:#{data['role']}:#{data['environment']}:#{data['secret']}"
+    host_data = redis.hgetall(host_key)
+    unless host_data
+        error 403
+    end
+    @instance = @ec2.instances[host_data['instance']]
     hostname = @instance.dns_name
-    $redis.del("instance:#{data['role']}:#{data['environment']}:#{data['secret']}")
+    $redis.del(host_key)
     @apps = []
     $redis.keys("app:*").each do |app|
       if $redis.hget(app, 'role') == data['role']
@@ -85,6 +96,10 @@ class GaptoolServer < Sinatra::Application
     data.merge!("apps" => @apps.to_json)
     data.merge!("instance" => @instance.id)
     hash2redis("host:#{data['role']}:#{data['environment']}:#{@instance.id}", data)
+
+    @chef_repo = data['chef_repo'] || $redis.hget('config', 'chefrepo')
+    @chef_branch = data['chef_branch'] || $redis.hget('config', 'chefbranch')
+    @initkey = $redis.hget('config', 'initkey')
     @json = {
       'hostname' => hostname,
       'recipe' => 'init',
@@ -92,12 +107,13 @@ class GaptoolServer < Sinatra::Application
       'run_list' => ['recipe[init]'],
       'role' => data['role'],
       'environment' => data['environment'],
-      'chefrepo' => $redis.hget('config', 'chefrepo'),
-      'chefbranch' => $redis.hget('config', 'chefbranch'),
+      'chefrepo' => @chef_repo,
+      'chefbranch' => @chef_branch,
       'identity' => $redis.hget('config','initkey'),
       'appuser' => $redis.hget('config','appuser'),
       'apps' => @apps
     }.to_json
+
     erb :init
   end
 
