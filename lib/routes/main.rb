@@ -18,7 +18,7 @@ class GaptoolServer < Sinatra::Application
     data.merge!("secret" => @secret)
     security_group = data['security_group'] || $redis.hget("role:#{data['role']}", "security_group")
     sgid = gt_securitygroup(data['role'], data['environment'], data['zone'], security_group)
-    image_id = data['ami'].chop || $redis.hget("amis:#{data['role']}", data['zone'].chop) || $redis.hget("amis", data['zone'].chop)
+    image_id = data['ami'] || $redis.hget("amis:#{data['role']}", data['zone'].chop) || $redis.hget("amis", data['zone'].chop)
     puts data['zone']
     if data['mirror']
       instance = @ec2.instances.create(
