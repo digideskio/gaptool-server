@@ -97,8 +97,8 @@ class GaptoolServer < Sinatra::Application
     data.merge!("instance" => @instance.id)
     hash2redis("host:#{data['role']}:#{data['environment']}:#{@instance.id}", data)
 
-    @chef_repo = data['chef_repo'] || $redis.hget('config', 'chefrepo')
-    @chef_branch = data['chef_branch'] || $redis.hget('config', 'chefbranch')
+    @chef_repo = host_data['chef_repo'] && !host_data['chef_repo'].empty? ? host_data['chef_repo'] : $redis.hget('config', 'chefrepo')
+    @chef_branch = host_data['chef_branch'] && !host_data['chef_branch'].empty? ? host_data['chef_branch'] : $redis.hget('config', 'chefbranch')
     @initkey = $redis.hget('config', 'initkey')
     @json = {
       'hostname' => hostname,
