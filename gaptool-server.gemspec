@@ -15,7 +15,8 @@ Gem::Specification.new do |s|
   s.executables = `git ls-files -- bin/*`.split("\n").map{|i| i.gsub(/^bin\//,'')}
   s.extra_rdoc_files = [
     "LICENSE.txt",
-    "README.rdoc"
+    "README.rdoc",
+    "VERSION"
   ]
   s.files = `git ls-files | grep lib`.split("\n")
   s.files << 'config.ru'
