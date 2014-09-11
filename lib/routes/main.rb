@@ -169,4 +169,11 @@ class GaptoolServer < Sinatra::Application
     {'hostname' => @host, 'key' => @key, 'pubkey' => @pubkey}.to_json
   end
 
+  get '/version' do
+    version = File.read(File.realpath(
+      File.join(File.dirname(__FILE__), "..", "..", 'VERSION')
+    )).strip
+    return {"server_version" => version, "api" => {"v0"=> "/"}}.to_json
+  end
+
 end
