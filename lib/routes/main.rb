@@ -46,7 +46,7 @@ class GaptoolServer < Sinatra::Application
     data = JSON.parse request.body.read
     AWS.config(:access_key_id => $redis.hget('config', 'aws_id'),
                :secret_access_key => $redis.hget('config', 'aws_secret'),
-               :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
+               :ec2_endpoint => "ec2.#{data['zone']}.amazonaws.com")
     @ec2 = AWS::EC2.new
     @instance = @ec2.instances[data['id']]
     res = @instance.terminate
