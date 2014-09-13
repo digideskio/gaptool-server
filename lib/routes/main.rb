@@ -19,36 +19,14 @@ class GaptoolServer < Sinatra::Application
     security_group = data['security_group'] || $redis.hget("role:#{data['role']}", "security_group")
     sgid = gt_securitygroup(data['role'], data['environment'], data['zone'], security_group)
     image_id = data['ami'] || $redis.hget("amis:#{data['role']}", data['zone'].chop) || $redis.hget("amis", data['zone'].chop)
-    puts data['zone']
-    if data['mirror']
-      instance = @ec2.instances.create(
-        :image_id => image_id,
-        :availability_zone => data['zone'],
-        :instance_type => data['itype'],
-        :key_name => "gaptool",
-        :security_group_ids => sgid,
-        :user_data => "#!/bin/bash\ncurl --silent -H 'X-GAPTOOL-USER: #{env['HTTP_X_GAPTOOL_USER']}' -H 'X-GAPTOOL-KEY: #{env['HTTP_X_GAPTOOL_KEY']}' #{$redis.hget('config', 'url')}/register -X PUT --data '#{data.to_json}' | bash",
-        :block_device_mappings => {
-          "/dev/sdf" => {
-            :volume_size => data['mirror'].to_i,
-            :delete_on_termination => false
-          },
-          "/dev/sdg" => {
-            :volume_size => data['mirror'].to_i,
-            :delete_on_termination => false
-          }
-        }
-      )
-    else
-      instance = @ec2.instances.create(
-        :image_id => image_id,
-        :availability_zone => data['zone'],
-        :instance_type => data['itype'],
-        :key_name => "gaptool",
-        :security_group_ids => sgid,
-        :user_data => "#!/bin/bash\ncurl --silent -H 'X-GAPTOOL-USER: #{env['HTTP_X_GAPTOOL_USER']}' -H 'X-GAPTOOL-KEY: #{env['HTTP_X_GAPTOOL_KEY']}' #{$redis.hget('config', 'url')}/register -X PUT --data '#{data.to_json}' | bash"
-      )
-    end
+    instance = @ec2.instances.create(
+      :image_id => image_id,
+      :availability_zone => data['zone'],
+      :instance_type => data['itype'],
+      :key_name => "gaptool",
+      :security_group_ids => sgid,
+      :user_data => "#!/bin/bash\ncurl --silent -H 'X-GAPTOOL-USER: #{env['HTTP_X_GAPTOOL_USER']}' -H 'X-GAPTOOL-KEY: #{env['HTTP_X_GAPTOOL_KEY']}' #{$redis.hget('config', 'url')}/register -X PUT --data '#{data.to_json}' | bash"
+    )
     # Add host tag
     instance.add_tag('Name', :value => "#{data['role']}-#{data['environment']}-#{instance.id}")
     instance.add_tag('gaptool', :value => "yes")
