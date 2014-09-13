@@ -11,7 +11,9 @@ class GaptoolServer < Sinatra::Application
 
   post '/init' do
     data = JSON.parse request.body.read
-    AWS.config(:access_key_id => $redis.hget('config', 'aws_id'), :secret_access_key => $redis.hget('config', 'aws_secret'), :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
+    AWS.config(:access_key_id => $redis.hget('config', 'aws_id'),
+               :secret_access_key => $redis.hget('config', 'aws_secret'),
+               :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
     @ec2 = AWS::EC2.new
     # create shared secret to reference in /register
     @secret = (0...8).map{65.+(rand(26)).chr}.join
@@ -42,7 +44,9 @@ class GaptoolServer < Sinatra::Application
 
   post '/terminate' do
     data = JSON.parse request.body.read
-    AWS.config(:access_key_id => $redis.hget('config', 'aws_id'), :secret_access_key => $redis.hget('config', 'aws_secret'), :ec2_endpoint => "ec2.#{data['zone']}.amazonaws.com")
+    AWS.config(:access_key_id => $redis.hget('config', 'aws_id'),
+               :secret_access_key => $redis.hget('config', 'aws_secret'),
+               :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
     @ec2 = AWS::EC2.new
     @instance = @ec2.instances[data['id']]
     res = @instance.terminate
@@ -53,7 +57,9 @@ class GaptoolServer < Sinatra::Application
 
   put '/register' do
     data = JSON.parse request.body.read
-    AWS.config(:access_key_id => $redis.hget('config', 'aws_id'), :secret_access_key => $redis.hget('config', 'aws_secret'), :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
+    AWS.config(:access_key_id => $redis.hget('config', 'aws_id'),
+               :secret_access_key => $redis.hget('config', 'aws_secret'),
+               :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
     @ec2 = AWS::EC2.new
     host_key = "instance:#{data['role']}:#{data['environment']}:#{data['secret']}"
     host_data = $redis.hgetall(host_key)
