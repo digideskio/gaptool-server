@@ -11,16 +11,14 @@ class GaptoolServer < Sinatra::Application
 
   post '/init' do
     data = JSON.parse request.body.read
-    AWS.config(:access_key_id => $redis.hget('config', 'aws_id'),
-               :secret_access_key => $redis.hget('config', 'aws_secret'),
-               :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
+    configure_ec2 data['zone'].chop
     @ec2 = AWS::EC2.new
+
     # create shared secret to reference in /register
     @secret = (0...8).map{65.+(rand(26)).chr}.join
-    data.merge!("secret" => @secret)
-    security_group = data['security_group'] || $redis.hget("role:#{data['role']}", "security_group")
-    sgid = gt_securitygroup(data['role'], data['environment'], data['zone'], security_group)
-    image_id = data['ami'] || $redis.hget("amis:#{data['role']}", data['zone'].chop) || $redis.hget("amis", data['zone'].chop)
+    security_group = data['security_group'] || get_role_data(data['role'])["security_group"]
+    sgid = get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
+    image_id = data['ami'] || get_ami_for_role(data['role'], data['zone'])
     instance = @ec2.instances.create(
       :image_id => image_id,
       :availability_zone => data['zone'],
@@ -32,57 +30,39 @@ class GaptoolServer < Sinatra::Application
     # Add host tag
     instance.add_tag('Name', :value => "#{data['role']}-#{data['environment']}-#{instance.id}")
     instance.add_tag('gaptool', :value => "yes")
-    # Create temporary redis entry for /register to pull the instance id
-    # with an expire of 24h
-    host_key = "instance:#{data['role']}:#{data['environment']}:#{@secret}"
-    $redis.hmset(host_key, 'instance_id', instance.id,
-                 'chef_branch', data['chef_branch'],
-                 'chef_repo', data['chef_repo'])
-    $redis.expire(host_key, 86400)
+    addserver(instance.id, data, @secret)
     "{\"instance\":\"#{instance.id}\"}"
   end
 
   post '/terminate' do
     data = JSON.parse request.body.read
-    AWS.config(:access_key_id => $redis.hget('config', 'aws_id'),
-               :secret_access_key => $redis.hget('config', 'aws_secret'),
-               :ec2_endpoint => "ec2.#{data['zone']}.amazonaws.com")
+    configure_ec2 data['zone']
     @ec2 = AWS::EC2.new
     @instance = @ec2.instances[data['id']]
-    res = @instance.terminate
-    res = $redis.del($redis.keys("*#{data['id']}"))
+    @instance.terminate
+    rmserver(data['id'])
     out = {data['id'] => {'status'=> 'terminated'}}
     out.to_json
   end
 
   put '/register' do
     data = JSON.parse request.body.read
-    AWS.config(:access_key_id => $redis.hget('config', 'aws_id'),
-               :secret_access_key => $redis.hget('config', 'aws_secret'),
-               :ec2_endpoint => "ec2.#{data['zone'].chop}.amazonaws.com")
+    configure_ec2 data['zone'].chop
     @ec2 = AWS::EC2.new
-    host_key = "instance:#{data['role']}:#{data['environment']}:#{data['secret']}"
-    host_data = $redis.hgetall(host_key)
-    unless host_data
-        error 403
-    end
-    @instance = @ec2.instances[host_data['instance_id']]
+    instance_id = register_server data['role'], data['environment'], data['secret']
+    error 403 unless instance_id
+    @instance = @ec2.instances[instance_id]
     hostname = @instance.dns_name
-    $redis.del(host_key)
-    @apps = []
-    $redis.keys("app:*").each do |app|
-      if $redis.hget(app, 'role') == data['role']
-        @apps << app.gsub('app:', '')
-      end
-    end
-    data.merge!("capacity" => $redis.hget('capacity', data['itype']))
+
+    @apps = apps_in_role(data['role'])
     data.merge!("hostname" => hostname)
     data.merge!("apps" => @apps.to_json)
     data.merge!("instance" => @instance.id)
-    hash2redis("host:#{data['role']}:#{data['environment']}:#{@instance.id}", data)
 
+    host_data = get_server_data instance_id
     @chef_repo = host_data['chef_repo'] && !host_data['chef_repo'].empty? ? host_data['chef_repo'] : $redis.hget('config', 'chefrepo')
     @chef_branch = host_data['chef_branch'] && !host_data['chef_branch'].empty? ? host_data['chef_branch'] : $redis.hget('config', 'chefbranch')
+    # FIXME: remove init key from redis
     @initkey = $redis.hget('config', 'initkey')
     @json = {
       'hostname' => hostname,
@@ -93,7 +73,7 @@ class GaptoolServer < Sinatra::Application
       'environment' => data['environment'],
       'chefrepo' => @chef_repo,
       'chefbranch' => @chef_branch,
-      'identity' => $redis.hget('config','initkey'),
+      'identity' => @initkey,
       'appuser' => $redis.hget('config','appuser'),
       'apps' => @apps
     }.to_json
@@ -102,53 +82,47 @@ class GaptoolServer < Sinatra::Application
   end
 
   get '/hosts' do
-    out = []
-    $redis.keys("host:*").each do |host|
-      out << $redis.hgetall(host)
-    end
-    out.to_json
+    servers.map do |inst|
+      get_server_data inst
+    end.to_json
   end
 
   get '/apps' do
     out = {}
-    $redis.keys("app:*").each do |app|
-      out.merge!(app => $redis.hgetall(app))
+    apps.each do |app|
+      out[app] = get_app_data(app)
     end
     out.to_json
   end
 
   get '/hosts/:role' do
-    out = []
-    $redis.keys("host:#{params[:role]}:*").each do |host|
-      out << $redis.hgetall(host)
-    end
-    out.to_json
+    servers_in_role(params[:role]).map do |inst|
+      get_server_data inst
+    end.to_json
   end
 
   get '/instance/:id' do
-    $redis.hgetall($redis.keys("host:*:*:#{params[:id]}").first).to_json
+    get_server_data(params[:id]).to_json
   end
 
   get '/hosts/:role/:environment' do
-    out = []
-    unless params[:role] == "ALL"
-      $redis.keys("host:#{params[:role]}:#{params[:environment]}*").each do |host|
-        out << $redis.hgetall(host)
-      end
+    if params[:role] == 'ALL'
+      list = servers_in_env params[:environment]
     else
-      $redis.keys("host:*:#{params[:environment]}:*").each do |host|
-        out << $redis.hgetall(host)
-      end
+      list = servers_in_role_env params[:role], params[:environment]
     end
-    out.to_json
+    list.map do |inst|
+      get_server_data inst
+    end.to_json
   end
 
   get '/host/:role/:environment/:instance' do
-    $redis.hgetall("host:#{params[:role]}:#{params[:environment]}:#{params[:instance]}").to_json
+    get_server_data params[:instance]
   end
 
   get '/ssh/:role/:environment/:instance' do
-    @host = $redis.hget("host:#{params[:role]}:#{params[:environment]}:#{params[:instance]}", 'hostname')
+    data = get_server_data params[:instance]
+    @host = data['hostname']
     @key = putkey(@host)
     {'hostname' => @host, 'key' => @key, 'pubkey' => @pubkey}.to_json
   end
