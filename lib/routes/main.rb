@@ -88,6 +88,7 @@ class GaptoolServer < Sinatra::Application
       'hostname' => hostname,
       'recipe' => 'init',
       'number' => @instance.id,
+      'instance' => @instance.id,
       'run_list' => ['recipe[init]'],
       'role' => data['role'],
       'environment' => data['environment'],
