@@ -21,6 +21,10 @@ class GaptoolServer < Sinatra::Application
     security_group = data['security_group'] || $redis.hget("role:#{data['role']}", "security_group")
     sgid = gt_securitygroup(data['role'], data['environment'], data['zone'], security_group)
     image_id = data['ami'] || $redis.hget("amis:#{data['role']}", data['zone'].chop) || $redis.hget("amis", data['zone'].chop)
+    chef_runlist = $redis.hget("role:#{data['role']}", "chef_runlist")
+    unless data['chef_runlist'].nil?
+      chef_runlist = data['chef_runlist'].to_json
+    end
     instance = @ec2.instances.create(
       :image_id => image_id,
       :availability_zone => data['zone'],
@@ -37,7 +41,8 @@ class GaptoolServer < Sinatra::Application
     host_key = "instance:#{data['role']}:#{data['environment']}:#{@secret}"
     $redis.hmset(host_key, 'instance_id', instance.id,
                  'chef_branch', data['chef_branch'],
-                 'chef_repo', data['chef_repo'])
+                 'chef_repo', data['chef_repo'],
+                 'chef_runlist', chef_runlist)
     $redis.expire(host_key, 86400)
     "{\"instance\":\"#{instance.id}\"}"
   end
@@ -75,6 +80,17 @@ class GaptoolServer < Sinatra::Application
         @apps << app.gsub('app:', '')
       end
     end
+
+    init_recipe = 'recipe[init]'
+    @run_list = [init_recipe]
+    unless host_data['chef_runlist'].nil? || host_data['chef_runlist'].empty?
+      @run_list = [*host_data['chef_runlist']]
+      unless @run_list.include? init_recipe
+        @run_list.unshift(init_recipe)
+      end
+      data['chef_runlist'] = @run_list.to_json
+    end
+
     data.merge!("capacity" => $redis.hget('capacity', data['itype']))
     data.merge!("hostname" => hostname)
     data.merge!("apps" => @apps.to_json)
@@ -89,7 +105,7 @@ class GaptoolServer < Sinatra::Application
       'recipe' => 'init',
       'number' => @instance.id,
       'instance' => @instance.id,
-      'run_list' => ['recipe[init]'],
+      'run_list' => @run_list,
       'role' => data['role'],
       'environment' => data['environment'],
       'chefrepo' => @chef_repo,
