@@ -83,8 +83,8 @@ class GaptoolServer < Sinatra::Application
 
     init_recipe = 'recipe[init]'
     @run_list = [init_recipe]
-    unless host_data['chef_runlist'].nil? || host_data['chef_runlist'].empty?
-      @run_list = [*host_data['chef_runlist']]
+    unless host_data['chef_runlist'].nil?
+      @run_list = [*eval(host_data['chef_runlist'])]
       unless @run_list.include? init_recipe
         @run_list.unshift(init_recipe)
       end
