@@ -1,0 +1,11 @@
+gaptool:
+    build: .
+    links:
+      - redis
+    ports:
+      - "3000:3000"
+redis:
+    image: redis:2.8.13
+    ports:
+      - 6379
+
