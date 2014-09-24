@@ -72,7 +72,7 @@ class GaptoolServer < Sinatra::Application
     data.merge!("apps" => @apps.to_json)
     data.merge!("instance" => @instance.id)
 
-    host_data = get_server_data instance_id
+    host_data = get_server_data instance_id, initkey: true
     @chef_repo = host_data['chef_repo']
     @chef_branch = host_data['chef_branch']
     # FIXME: remove init key from redis

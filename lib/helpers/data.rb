@@ -48,19 +48,19 @@ module DataHelper
     $redis.hget('config', 'chefrepo')
   end
 
-  def get_server_data(instance, opt={})
+  def get_server_data(instance, opts={})
     rs = $redis.hgetall("instance:#{instance}")
     if rs['chef_runlist'].nil?
       rs['chef_runlist'] = get_config('default_runlist') || 'recipe[init]'
     else
       rs['chef_runlist'] = JSON.parse rs['chef_runlist']
     end
-    %Q(chef_repo chef_branch).each do |v|
+    %w(chef_repo chef_branch).each do |v|
       if rs[v].nil? || rs[v].empty?
         rs[v] = get_config(v.gsub(/_/, ''))
       end
     end
-    if opts['initkey']
+    if opts[:initkey]
       rs['initkey'] = get_config('initkey')
     end
     rs
