@@ -19,6 +19,12 @@ class GaptoolServer < Sinatra::Application
     security_group = data['security_group'] || get_role_data(data['role'])["security_group"]
     sgid = get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
     image_id = data['ami'] || get_ami_for_role(data['role'], data['zone'])
+
+    chef_runlist = $redis.hget("role:#{data['role']}", "chef_runlist")
+    unless data['chef_runlist'].nil?
+      chef_runlist = data['chef_runlist'].to_json
+    end
+
     instance = @ec2.instances.create(
       :image_id => image_id,
       :availability_zone => data['zone'],
@@ -53,8 +59,18 @@ class GaptoolServer < Sinatra::Application
     error 403 unless instance_id
     @instance = @ec2.instances[instance_id]
     hostname = @instance.dns_name
-
     @apps = apps_in_role(data['role'])
+
+    init_recipe = 'recipe[init]'
+    @run_list = [init_recipe]
+    unless host_data['chef_runlist'].nil?
+      @run_list = [*eval(host_data['chef_runlist'])]
+      unless @run_list.include? init_recipe
+        @run_list.unshift(init_recipe)
+      end
+      data['chef_runlist'] = @run_list.to_json
+    end
+
     data.merge!("hostname" => hostname)
     data.merge!("apps" => @apps.to_json)
     data.merge!("instance" => @instance.id)
@@ -68,7 +84,8 @@ class GaptoolServer < Sinatra::Application
       'hostname' => hostname,
       'recipe' => 'init',
       'number' => @instance.id,
-      'run_list' => ['recipe[init]'],
+      'instance' => @instance.id,
+      'run_list' => @run_list,
       'role' => data['role'],
       'environment' => data['environment'],
       'chefrepo' => @chef_repo,
