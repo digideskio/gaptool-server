@@ -17,6 +17,7 @@ RUN apt-get update && \
 # install the gem to get the deps, then remove
 RUN gem install --no-rdoc --no-ri gaptool-server && \
     gem uninstall gaptool-server
+RUN gem install racksh
 
 RUN adduser gaptool --home /opt/gaptool --shell /bin/bash --disabled-password --gecos ""
 
