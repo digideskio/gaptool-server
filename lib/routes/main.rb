@@ -20,10 +20,7 @@ class GaptoolServer < Sinatra::Application
     sgid = get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
     image_id = data['ami'] || get_ami_for_role(data['role'], data['zone'])
 
-    chef_runlist = $redis.hget("role:#{data['role']}", "chef_runlist")
-    unless data['chef_runlist'].nil?
-      chef_runlist = data['chef_runlist'].to_json
-    end
+    data['chef_runlist'] = data['chef_runlist'].nil? ? get_runlist_for_role(data['role']) : data['chef_runlist']
 
     instance = @ec2.instances.create(
       :image_id => image_id,
@@ -76,10 +73,12 @@ class GaptoolServer < Sinatra::Application
     data.merge!("instance" => @instance.id)
 
     host_data = get_server_data instance_id
-    @chef_repo = host_data['chef_repo'] && !host_data['chef_repo'].empty? ? host_data['chef_repo'] : $redis.hget('config', 'chefrepo')
-    @chef_branch = host_data['chef_branch'] && !host_data['chef_branch'].empty? ? host_data['chef_branch'] : $redis.hget('config', 'chefbranch')
+    @chef_repo = host_data['chef_repo']
+    @chef_branch = host_data['chef_branch']
     # FIXME: remove init key from redis
-    @initkey = $redis.hget('config', 'initkey')
+    @initkey = host_data['init_key']
+    @run_list = host_data['chef_runlist'].to_json
+
     @json = {
       'hostname' => hostname,
       'recipe' => 'init',

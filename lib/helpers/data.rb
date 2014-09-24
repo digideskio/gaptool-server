@@ -6,6 +6,12 @@ module DataHelper
     if role.nil? or environment.nil?
       raise
     end
+
+    unless data['chef_runlist'].nil?
+      data['chef_runlist'] = [*data['chef_runlist']]
+      data['chef_runlist'] = data['chef_runlist'].to_json
+    end
+
     $redis.sadd("instances", instance)
     $redis.sadd("role:#{role}:instances", instance)
     $redis.sadd("environment:#{environment}:instances", instance)
@@ -36,8 +42,26 @@ module DataHelper
     end
   end
 
-  def get_server_data(instance)
-    $redis.hgetall("instance:#{instance}")
+  def get_config(key)
+    $redis.hget('config', 'chefrepo')
+  end
+
+  def get_server_data(instance, opt={})
+    rs = $redis.hgetall("instance:#{instance}")
+    if rs['chef_runlist'].nil?
+      rs['chef_runlist'] = get_config('default_runlist') || 'recipe[init]'
+    else
+      rs['chef_runlist'] = JSON.parse rs['chef_runlist']
+    end
+    %Q(chef_repo chef_branch).each do |v|
+      if rs[v].nil? || rs[v].empty?
+        rs[v] = get_config(v.gsub(/_/, ''))
+      end
+    end
+    if opts['initkey']
+      rs['initkey'] = get_config('initkey')
+    end
+    rs
   end
 
   def get_app_data(app)
@@ -51,6 +75,13 @@ module DataHelper
   def get_ami_for_role(role, zone)
     zone = zone.chop
     $redis.hget("amis:#{role}", zone) || $redis.hget("amis", zone)
+  end
+
+  def get_runlist_for_role(role)
+    rl = $redis.hget("role:#{data['role']}", "chef_runlist")
+    unless rl.nil?
+      JSON.parse rl
+    end
   end
 
   def zones
