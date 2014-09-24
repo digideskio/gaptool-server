@@ -25,6 +25,7 @@ get_from_s3() {
     fi
     echo "Fixing permissions"
     chmod 666 $dest
+    chmod 777 $dir
 }
 
 if [ $# -eq 1 ]; then
