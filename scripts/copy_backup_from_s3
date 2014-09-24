@@ -1,0 +1,59 @@
+#!/bin/bash
+
+set -u
+dir=$(dirname $0)/../redis_data/
+which realpath >/dev/null && dir=$(realpath $dir)
+dest=$dir/dump.rdb
+
+which s3cmd >/dev/null
+[ $? -ne 0 ] && echo "You need the s3cmd installed (and configured)" && exit 1
+which lzop >/dev/null
+[ $? -ne 0 ] && echo "You need lzop installed" && exit 1
+
+set -e
+
+get_from_s3() {
+    pushd $dir &>/dev/null
+    echo "Downloading $1"
+    s3cmd get $1 ._s3file
+    if [[ $1 == *.lzo ]]; then
+        echo "Unpacking $1 to $dest"
+        lzop -d -f ._s3file -o $dest
+        rm -f ._s3file
+    else
+        mv ._s3file $dest
+    fi
+    echo "Fixing permissions"
+    chmod 666 $dest
+}
+
+if [ $# -eq 1 ]; then
+    if [[ $1 == s3://* ]]; then
+        if echo $1 | grep -q '*'; then
+            echo "Searching for last backup in $1"
+            file=$(s3cmd ls $1 | sort -n -k1,2 | tail -n 1 | awk '{print $4}')
+            [ -z $file ] && echo "Cannot find any backup in $1" && exit 1
+            echo "Found: $file"
+        else
+            file=$1
+        fi
+        get_from_s3 $file
+    else
+        echo "Copying $1 to $dest"
+        if [[ $1 == *.lzo ]]; then
+            echo "Unpacking $1 to $dest"
+            lzop -d -f $1 -o $dest
+        else
+            cp $1 $dest
+        fi
+    fi
+else
+    echo "usage: $(basename $0) <backup_location>"
+    echo ""
+    echo "<backup_location>"
+    echo -e "\t * s3://<bucket>/<prefix>* : Download last backup from s3 bucket"
+    echo -e "\t * s3://<bucket>/<prefix>/<file> : Download a specific file from s3"
+    echo -e "\t * <path> : Copy a file from a local path"
+    echo ""
+    echo ".lzo files will be automatically uncompressed"
+fi

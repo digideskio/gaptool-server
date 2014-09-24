@@ -53,3 +53,6 @@ tools
 #*.rbc
 Gemfile.lock
 *.gem
+
+redis_data/
+
