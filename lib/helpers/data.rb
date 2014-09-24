@@ -1,3 +1,5 @@
+require 'json'
+
 module DataHelper
 
   def addserver(instance, data, secret)
