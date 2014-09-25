@@ -6,9 +6,10 @@ module GaptoolBaseHelpers
 
   def configure_ec2 zone
     return if $dryrun
-    AWS.config(:access_key_id => $redis.hget('config', 'aws_id'),
-               :secret_access_key => $redis.hget('config', 'aws_secret'),
-               :ec2_endpoint => "ec2.#{zone}.amazonaws.com")
+    id = ENV['AWS_ACCESS_KEY_ID'] || $redis.hget('config', 'aws_id')
+    secret = ENV['AWS_SECRET_ACCESS_KEY'] || $redis.hget('config', 'aws_secret')
+    AWS.config(access_key_id: id, secret_access_key: secret,
+               ec2_endpoint: "ec2.#{zone}.amazonaws.com")
   end
 
   def putkey(host)
