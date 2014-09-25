@@ -19,8 +19,8 @@ class GaptoolServer < Sinatra::Application
     security_group = data['security_group'] || get_role_data(data['role'])["security_group"]
     sgid = get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
     image_id = data['ami'] || get_ami_for_role(data['role'], data['zone'])
-
     data['chef_runlist'] = data['chef_runlist'].nil? ? get_runlist_for_role(data['role']) : data['chef_runlist']
+    data['terminate'] = data['terminate'].nil? ? true : !!data['terminate']
 
     instance = @ec2.instances.create(
       :image_id => image_id,
@@ -40,6 +40,14 @@ class GaptoolServer < Sinatra::Application
   post '/terminate' do
     data = JSON.parse request.body.read
     configure_ec2 data['zone']
+    host_data = get_server_data data['id']
+    if host_data.nil?
+      error 404
+    end
+    if host_data['terminate'] == false
+      error 403
+    end
+
     @ec2 = AWS::EC2.new
     @instance = @ec2.instances[data['id']]
     @instance.terminate
