@@ -22,6 +22,12 @@ class GaptoolServer < Sinatra::Application
     sgid = gt_securitygroup(data['role'], data['environment'], data['zone'], security_group)
     image_id = data['ami'] || $redis.hget("amis:#{data['role']}", data['zone'].chop) || $redis.hget("amis", data['zone'].chop)
     chef_runlist = $redis.hget("role:#{data['role']}", "chef_runlist")
+
+    terminate = true
+    unless data['terminate'].nil?
+      terminate = false
+    end
+
     unless data['chef_runlist'].nil?
       chef_runlist = data['chef_runlist'].to_json
     end
@@ -42,7 +48,8 @@ class GaptoolServer < Sinatra::Application
     $redis.hmset(host_key, 'instance_id', instance.id,
                  'chef_branch', data['chef_branch'],
                  'chef_repo', data['chef_repo'],
-                 'chef_runlist', chef_runlist)
+                 'chef_runlist', chef_runlist,
+                 'terminate', terminate)
     $redis.expire(host_key, 86400)
     "{\"instance\":\"#{instance.id}\"}"
   end
@@ -52,6 +59,18 @@ class GaptoolServer < Sinatra::Application
     AWS.config(:access_key_id => $redis.hget('config', 'aws_id'),
                :secret_access_key => $redis.hget('config', 'aws_secret'),
                :ec2_endpoint => "ec2.#{data['zone']}.amazonaws.com")
+    keys = $redis.keys("*:*:#{date['id']}")
+    if keys.nil? || keys.empty?
+      error 404
+    end
+    if keys.length >= 1
+      error 409
+    end
+    data = $redis.hgetall(keys.first)
+    if data['terminate'] == false
+      error 403
+    end
+
     @ec2 = AWS::EC2.new
     @instance = @ec2.instances[data['id']]
     res = @instance.terminate
@@ -95,6 +114,7 @@ class GaptoolServer < Sinatra::Application
     data.merge!("hostname" => hostname)
     data.merge!("apps" => @apps.to_json)
     data.merge!("instance" => @instance.id)
+    data['terminate'] = host_data['terminate'].nil? ? 'true' : host_date['terminate']
     hash2redis("host:#{data['role']}:#{data['environment']}:#{@instance.id}", data)
 
     @chef_repo = host_data['chef_repo'] && !host_data['chef_repo'].empty? ? host_data['chef_repo'] : $redis.hget('config', 'chefrepo')
