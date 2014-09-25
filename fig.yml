@@ -1,5 +1,10 @@
 gaptool:
     build: .
+    environment:
+        RACK_ENV: development
+        DRYRUN: true
+        AWS_ACCESS_KEY_ID: fakeid
+        AWS_SECRET_ACCESS_KEY: fakesecret
     links:
       - redis
     ports:
