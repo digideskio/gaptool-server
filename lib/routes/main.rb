@@ -59,7 +59,7 @@ class GaptoolServer < Sinatra::Application
     AWS.config(:access_key_id => $redis.hget('config', 'aws_id'),
                :secret_access_key => $redis.hget('config', 'aws_secret'),
                :ec2_endpoint => "ec2.#{data['zone']}.amazonaws.com")
-    keys = $redis.keys("*:*:#{date['id']}")
+    keys = $redis.keys("*:*:#{data['id']}")
     if keys.nil? || keys.empty?
       error 404
     end
@@ -114,7 +114,7 @@ class GaptoolServer < Sinatra::Application
     data.merge!("hostname" => hostname)
     data.merge!("apps" => @apps.to_json)
     data.merge!("instance" => @instance.id)
-    data['terminate'] = host_data['terminate'].nil? ? 'true' : host_date['terminate']
+    data['terminate'] = host_data['terminate'].nil? ? 'true' : host_data['terminate']
     hash2redis("host:#{data['role']}:#{data['environment']}:#{@instance.id}", data)
 
     @chef_repo = host_data['chef_repo'] && !host_data['chef_repo'].empty? ? host_data['chef_repo'] : $redis.hget('config', 'chefrepo')
