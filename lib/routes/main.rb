@@ -11,8 +11,6 @@ class GaptoolServer < Sinatra::Application
 
   post '/init' do
     data = JSON.parse request.body.read
-    configure_ec2 data['zone'].chop
-    @ec2 = AWS::EC2.new
 
     # create shared secret to reference in /register
     @secret = (0...8).map{65.+(rand(26)).chr}.join
@@ -22,24 +20,27 @@ class GaptoolServer < Sinatra::Application
     data['chef_runlist'] = data['chef_runlist'].nil? ? get_runlist_for_role(data['role']) : data['chef_runlist']
     data['terminate'] = data['terminate'].nil? ? true : !!data['terminate']
 
-    instance = @ec2.instances.create(
+    id = create_ec2_instance(
+    {
       :image_id => image_id,
       :availability_zone => data['zone'],
       :instance_type => data['itype'],
       :key_name => "gaptool",
       :security_group_ids => sgid,
       :user_data => "#!/bin/bash\ncurl --silent -H 'X-GAPTOOL-USER: #{env['HTTP_X_GAPTOOL_USER']}' -H 'X-GAPTOOL-KEY: #{env['HTTP_X_GAPTOOL_KEY']}' #{$redis.hget('config', 'url')}/register -X PUT --data '#{data.to_json}' | bash"
+     }, {
+       role: data['role'],
+       env: data['environment'],
+       zone: data['zone']
+     }
     )
     # Add host tag
-    instance.add_tag('Name', :value => "#{data['role']}-#{data['environment']}-#{instance.id}")
-    instance.add_tag('gaptool', :value => "yes")
-    addserver(instance.id, data, @secret)
-    "{\"instance\":\"#{instance.id}\"}"
+    addserver(id, data, @secret)
+    "{\"instance\":\"#{id}\"}"
   end
 
   post '/terminate' do
     data = JSON.parse request.body.read
-    configure_ec2 data['zone']
     host_data = get_server_data data['id']
     if host_data.nil?
       error 404
@@ -48,9 +49,7 @@ class GaptoolServer < Sinatra::Application
       error 403
     end
 
-    @ec2 = AWS::EC2.new
-    @instance = @ec2.instances[data['id']]
-    @instance.terminate
+    terminate_ec2_instance(data['zone'], data['id'])
     rmserver(data['id'])
     out = {data['id'] => {'status'=> 'terminated'}}
     out.to_json
@@ -58,12 +57,9 @@ class GaptoolServer < Sinatra::Application
 
   put '/register' do
     data = JSON.parse request.body.read
-    configure_ec2 data['zone'].chop
-    @ec2 = AWS::EC2.new
     instance_id = register_server data['role'], data['environment'], data['secret']
     error 403 unless instance_id
-    @instance = @ec2.instances[instance_id]
-    hostname = @instance.dns_name
+    hostname = get_ec2_instance_data(data['zone'].chop, instance_id)[:hostname]
     @apps = apps_in_role(data['role'])
 
     init_recipe = 'recipe[init]'
@@ -78,7 +74,7 @@ class GaptoolServer < Sinatra::Application
 
     data.merge!("hostname" => hostname)
     data.merge!("apps" => @apps.to_json)
-    data.merge!("instance" => @instance.id)
+    data.merge!("instance" => instance_id)
 
     host_data = get_server_data instance_id, initkey: true
     @chef_repo = host_data['chef_repo']
@@ -90,8 +86,8 @@ class GaptoolServer < Sinatra::Application
     @json = {
       'hostname' => hostname,
       'recipe' => 'init',
-      'number' => @instance.id,
-      'instance' => @instance.id,
+      'number' => instance_id,
+      'instance' => instance_id,
       'run_list' => @run_list,
       'role' => data['role'],
       'environment' => data['environment'],

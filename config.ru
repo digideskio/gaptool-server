@@ -19,6 +19,9 @@ end
 ENV['REDIS_HOST'] = 'localhost' unless ENV['REDIS_HOST']
 ENV['REDIS_PORT'] = '6379' unless ENV['REDIS_PORT']
 ENV['REDIS_PASS'] = nil unless ENV['REDIS_PASS']
+
+ENV['DRYRUN'] = nil unless ENV['DRYRUN'] == 'true'
+
 $redis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_PORT'], :password => ENV['REDIS_PASS'])
 
 libpath = File.expand_path(File.join(File.dirname(__FILE__), "lib"))
