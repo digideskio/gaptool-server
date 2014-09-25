@@ -2,13 +2,14 @@ gaptool:
     build: .
     environment:
         RACK_ENV: development
-        DRYRUN: true
+        DRYRUN: 'true'
         AWS_ACCESS_KEY_ID: fakeid
         AWS_SECRET_ACCESS_KEY: fakesecret
     links:
       - redis
     ports:
       - "3000:3000"
+    entrypoint: /opt/gaptool/scripts/fig_entry.rb
 redis:
     image: redis:2.8.13
     ports:
