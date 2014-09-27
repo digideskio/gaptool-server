@@ -50,7 +50,7 @@ module DataHelper
 
   def get_server_data(instance, opts={})
     rs = $redis.hgetall("instance:#{instance}")
-    if rs['chef_runlist'].nil?
+    if rs['chef_runlist'].nil? || rs['chef_runlist'].empty?
       rs['chef_runlist'] = get_config('default_runlist') || 'recipe[init]'
     else
       rs['chef_runlist'] = JSON.parse rs['chef_runlist']
