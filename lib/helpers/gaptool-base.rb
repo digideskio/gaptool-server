@@ -29,7 +29,7 @@ module GaptoolBaseHelpers
   end
 
   def get_or_create_securitygroup(role, environment, zone, groupname=nil)
-    return "sg-test#{SecureRandom.hex(4)}" if $dryrun
+    return "sg-test#{SecureRandom.hex(2)}" if $dryrun
     configure_ec2 zone.chop
     @ec2 = AWS::EC2.new
     groupname = groupname || "#{role}-#{environment}"
@@ -45,7 +45,7 @@ module GaptoolBaseHelpers
   end
 
   def create_ec2_instance(ec2opts, data)
-    return "i-test#{SecureRandom.hex(4)}" if $dryrun
+    return "i-test#{SecureRandom.hex(2)}" if $dryrun
     configure_ec2 data['zone'].chop
     ec2 = AWS::EC2.new
 
