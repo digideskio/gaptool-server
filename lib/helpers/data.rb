@@ -80,7 +80,7 @@ module DataHelper
   end
 
   def get_runlist_for_role(role)
-    rl = $redis.hget("role:#{data['role']}", "chef_runlist")
+    rl = $redis.hget("role:#{role}", "chef_runlist")
     unless rl.nil?
       JSON.parse rl
     end
