@@ -4,6 +4,7 @@ module DataHelper
 
   def addserver(instance, data, secret)
     role = data['role']
+    data['instance'] = instance
     environment = data['environment']
     if role.nil? or environment.nil?
       raise
