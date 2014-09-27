@@ -17,17 +17,19 @@ module DataHelper
     $redis.sadd("instances", instance)
     $redis.sadd("role:#{role}:instances", instance)
     $redis.sadd("environment:#{environment}:instances", instance)
-    $redis.hmset("instance:#{instance}", *data.flatten)
     unless secret.nil?
+      data['registered'] = false
       $redis.sadd('instances:unregistered', instance)
       $redis.set("instances:secrets:#{data['role']}:#{data['environment']}:#{secret}", instance)
     end
+    $redis.hmset("instance:#{instance}", *data.flatten)
   end
 
   def register_server(role, environment, secret)
     key = "instances:secrets:#{role}:#{environment}:#{secret}"
     instance = $redis.get(key)
     unless instance.nil?
+      $redis.hdel("instance:#{instance}", "registered")
       $redis.srem('instances:unregistered', instance)
       $redis.del(key)
       instance
