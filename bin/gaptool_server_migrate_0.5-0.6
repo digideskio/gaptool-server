@@ -50,7 +50,7 @@ $redis.keys('host:*').each do |key|
   addserver(iid, data, nil)
   $redis.del(key)
   # remove stale keys from hsh
-  $redis.hdel "instance:#{iid}", ["capacity", "mirror", "secret"]
+  $redis.hdel "instance:#{iid}", ["capacity", "mirror", "secret", 'instance']
 end
 
 $redis.smembers('instances').each do |inst|

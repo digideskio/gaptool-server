@@ -4,7 +4,6 @@ module DataHelper
 
   def addserver(instance, data, secret)
     role = data['role']
-    data['instance'] = instance
     environment = data['environment']
     if role.nil? or environment.nil?
       raise
@@ -51,6 +50,7 @@ module DataHelper
 
   def get_server_data(instance, opts={})
     rs = $redis.hgetall("instance:#{instance}")
+    rs['instance'] = instance
     if rs['chef_runlist'].nil? || rs['chef_runlist'].empty?
       rs['chef_runlist'] = get_config('default_runlist') || 'recipe[init]'
     else
