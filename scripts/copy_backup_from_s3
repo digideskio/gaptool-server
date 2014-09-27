@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -u
+set -e
 dir=$(dirname $0)/../redis_data/
 which realpath >/dev/null && dir=$(realpath $dir)
 dest=$dir/dump.rdb
@@ -47,6 +48,8 @@ if [ $# -eq 1 ]; then
         else
             cp $1 $dest
         fi
+        chmod 666 $dest
+        chmod 777 $dir
     fi
 else
     echo "usage: $(basename $0) <backup_location>"
