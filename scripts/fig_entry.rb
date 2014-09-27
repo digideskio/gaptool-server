@@ -1,5 +1,5 @@
-#!/usr/bin/ruby 
-#
+#!/usr/bin/ruby
+
 ENV.each do |k, v|
   newk = nil
   if k.include? '_ENV'
@@ -11,4 +11,6 @@ ENV.each do |k, v|
   ENV[newk] = v if newk
 end
 
-exec *ARGV
+unless ARGV.empty?
+  exec *ARGV
+end
