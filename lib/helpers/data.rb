@@ -45,7 +45,7 @@ module DataHelper
   end
 
   def get_config(key)
-    $redis.hget('config', 'chefrepo')
+    $redis.hget('config', key)
   end
 
   def get_server_data(instance, opts={})
