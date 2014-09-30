@@ -110,6 +110,10 @@ class GaptoolServer < Sinatra::Application
       data['chef_runlist'] = @run_list.to_json
     end
 
+    if @run_list.length == 1 && @run_list[0] == init_recipe
+      data.delete('chef_runlist')
+    end
+
     data.merge!("capacity" => $redis.hget('capacity', data['itype']))
     data.merge!("hostname" => hostname)
     data.merge!("apps" => @apps.to_json)
