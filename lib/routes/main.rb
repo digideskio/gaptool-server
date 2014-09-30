@@ -63,7 +63,7 @@ class GaptoolServer < Sinatra::Application
     if keys.nil? || keys.empty?
       error 404
     end
-    if keys.length >= 1
+    if keys.length > 1
       error 409
     end
     data = $redis.hgetall(keys.first)
