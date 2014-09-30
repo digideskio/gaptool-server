@@ -66,8 +66,8 @@ class GaptoolServer < Sinatra::Application
     if keys.length > 1
       error 409
     end
-    data = $redis.hgetall(keys.first)
-    if data['terminate'] == false
+    hdata = $redis.hgetall(keys.first)
+    if hdata['terminate'] == false
       error 403
     end
 
