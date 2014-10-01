@@ -48,6 +48,9 @@ $redis.keys('host:*').each do |key|
   $redis.sadd('roles', role)
   data['environment'] = env
   addserver(iid, data, nil)
+  if data['chef_runlist'] == "recipe[init]"
+    $redis.hdel "instance:#{iid}", "chef_runlist"
+  end
   $redis.del(key)
   # remove stale keys from hsh
   $redis.hdel "instance:#{iid}", ["capacity", "mirror", "secret", 'instance']
