@@ -62,6 +62,7 @@ class GaptoolServer < Sinatra::Application
     error 403 unless instance_id
     hostname = get_ec2_instance_data(data['zone'].chop, instance_id)[:hostname]
     @apps = apps_in_role(data['role'])
+    host_data = get_server_data instance_id, initkey: true
 
     init_recipe = 'recipe[init]'
     @run_list = [init_recipe]
@@ -74,14 +75,10 @@ class GaptoolServer < Sinatra::Application
     end
 
     if @run_list.length == 1 && @run_list[0] == init_recipe
-      data.delete('chef_runlist')
+      host_data.delete('chef_runlist')
+      save_server_data instance_id host_data
     end
 
-    data.merge!("hostname" => hostname)
-    data.merge!("apps" => @apps.to_json)
-    data.merge!("instance" => instance_id)
-
-    host_data = get_server_data instance_id, initkey: true
     @chef_repo = host_data['chef_repo']
     @chef_branch = host_data['chef_branch']
     # FIXME: remove init key from redis
