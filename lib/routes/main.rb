@@ -45,6 +45,7 @@ class GaptoolServer < Sinatra::Application
     if host_data.nil?
       error 404
     end
+
     if host_data['terminate'] == false
       error 403
     end
@@ -70,6 +71,10 @@ class GaptoolServer < Sinatra::Application
         @run_list.unshift(init_recipe)
       end
       data['chef_runlist'] = @run_list.to_json
+    end
+
+    if @run_list.length == 1 && @run_list[0] == init_recipe
+      data.delete('chef_runlist')
     end
 
     data.merge!("hostname" => hostname)
