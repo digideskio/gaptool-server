@@ -22,7 +22,15 @@ module DataHelper
       $redis.sadd('instances:unregistered', instance)
       $redis.set("instances:secrets:#{data['role']}:#{data['environment']}:#{secret}", instance)
     end
-    $redis.hmset("instance:#{instance}", *data.select{ |k,v| !v.nil? && v.is_a?(String) && !v.empty?}.flatten)
+    save_server_data instance data
+  end
+
+  def save_server_data(instance, data)
+    key = "instance:#{instance}"
+    $redis.multi do
+      $redis.hdel(key)
+      $redis.hmset("instance:#{instance}", *data.select{ |k,v| !v.nil? && v.is_a?(String) && !v.empty?}.flatten)
+    end
   end
 
   def register_server(role, environment, secret)
