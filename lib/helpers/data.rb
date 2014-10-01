@@ -22,13 +22,13 @@ module DataHelper
       $redis.sadd('instances:unregistered', instance)
       $redis.set("instances:secrets:#{data['role']}:#{data['environment']}:#{secret}", instance)
     end
-    save_server_data instance data
+    save_server_data instance, data
   end
 
   def save_server_data(instance, data)
     key = "instance:#{instance}"
     $redis.multi do
-      $redis.hdel(key)
+      $redis.del(key)
       $redis.hmset("instance:#{instance}", *data.select{ |k,v| !v.nil? && v.is_a?(String) && !v.empty?}.flatten)
     end
   end
@@ -61,9 +61,7 @@ module DataHelper
   def get_server_data(instance, opts={})
     rs = $redis.hgetall("instance:#{instance}")
     rs['instance'] = instance
-    if rs['chef_runlist'].nil? || rs['chef_runlist'].empty?
-      rs['chef_runlist'] = get_config('default_runlist') || 'recipe[init]'
-    else
+    if !rs['chef_runlist'].nil? && !rs['chef_runlist'].empty?
       rs['chef_runlist'] = JSON.parse rs['chef_runlist']
     end
     %w(chef_repo chef_branch).each do |v|
