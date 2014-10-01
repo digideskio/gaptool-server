@@ -7,13 +7,23 @@ require 'aws-sdk'
 require 'openssl'
 require 'net/ssh'
 require 'peach'
+require 'airbrake'
 
 class GaptoolServer < Sinatra::Application
-  disable :sessions
-  enable  :dump_errors
 
   error do
     {:result => 'error', :message => env['sinatra.error']}.to_json
+  end
+
+  configure do
+    unless ENV['GAPTOOL_AIRBRAKE_KEY'].nil?
+      Airbrake.configure do |cfg|
+        cfg.api_key = ENV['GAPTOOL_AIRBRAKE_KEY']
+      end
+      use Airbrake::Sinatra
+    end
+    disable :sessions
+    enable  :dump_errors
   end
 
   before do

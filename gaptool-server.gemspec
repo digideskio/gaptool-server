@@ -25,52 +25,11 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.summary = "gaptool-server for managing cloud resources"
 
-  if s.respond_to? :specification_version then
-    s.specification_version = 4
-
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<sinatra>, [">= 0"])
-      s.add_runtime_dependency(%q<thin>, ["~> 1.5.1"])
-      s.add_runtime_dependency(%q<redis>, [">= 0"])
-      s.add_runtime_dependency(%q<aws-sdk>, [">= 0"])
-      s.add_runtime_dependency(%q<net-ssh>, [">= 0"])
-      s.add_runtime_dependency(%q<peach>, [">= 0"])
-      s.add_development_dependency(%q<shoulda>, [">= 0"])
-      s.add_development_dependency(%q<rdoc>, [">= 0"])
-      s.add_development_dependency(%q<bundler>, [">= 0"])
-      s.add_development_dependency(%q<jeweler>, ["~> 1.8.4"])
-      s.add_development_dependency(%q<simplecov>, [">= 0"])
-      s.add_development_dependency(%q<shotgun>, [">= 0"])
-      s.add_development_dependency(%q<pry>, [">= 0"])
-    else
-      s.add_dependency(%q<sinatra>, [">= 0"])
-      s.add_dependency(%q<thin>, ["~> 1.5.1"])
-      s.add_dependency(%q<redis>, [">= 0"])
-      s.add_dependency(%q<aws-sdk>, [">= 0"])
-      s.add_dependency(%q<net-ssh>, [">= 0"])
-      s.add_dependency(%q<peach>, [">= 0"])
-      s.add_dependency(%q<shoulda>, [">= 0"])
-      s.add_dependency(%q<rdoc>, [">= 0"])
-      s.add_dependency(%q<bundler>, [">= 0"])
-      s.add_dependency(%q<jeweler>, ["~> 1.8.4"])
-      s.add_dependency(%q<simplecov>, [">= 0"])
-      s.add_dependency(%q<shotgun>, [">= 0"])
-      s.add_dependency(%q<pry>, [">= 0"])
-    end
-  else
-    s.add_dependency(%q<sinatra>, [">= 0"])
-    s.add_dependency(%q<thin>, ["~> 1.5.1"])
-    s.add_dependency(%q<redis>, [">= 0"])
-    s.add_dependency(%q<aws-sdk>, [">= 0"])
-    s.add_dependency(%q<net-ssh>, [">= 0"])
-    s.add_dependency(%q<peach>, [">= 0"])
-    s.add_dependency(%q<shoulda>, [">= 0"])
-    s.add_dependency(%q<rdoc>, [">= 0"])
-    s.add_dependency(%q<bundler>, [">= 0"])
-    s.add_dependency(%q<jeweler>, ["~> 1.8.4"])
-    s.add_dependency(%q<simplecov>, [">= 0"])
-    s.add_dependency(%q<shotgun>, [">= 0"])
-    s.add_dependency(%q<pry>, [">= 0"])
-  end
+  s.add_runtime_dependency 'sinatra', "~> 1.4"
+  s.add_runtime_dependency 'thin', "~> 1.6"
+  s.add_runtime_dependency 'redis', "~> 3.1"
+  s.add_runtime_dependency 'aws-sdk', "~> 1.54"
+  s.add_runtime_dependency 'net-ssh', "~> 2.9"
+  s.add_runtime_dependency 'peach', "~> 0.5"
 end
 
