@@ -29,7 +29,34 @@ get_from_s3() {
     chmod 777 $dir
 }
 
+fig_config() {
+    b2d=$(which 'boot2docker') || true
+    if [ ! -z $b2d ] && [ -z $DOCKER_HOST ]; then
+        export DOCKER_HOST="tcp://$($b2d ip 2>/dev/null):$($b2d cfg 2>/dev/null | grep DockerPort | cut -d' ' -f3)"
+    fi
+}
+
+fig_stop() {
+    pushd ../ &>/dev/null
+    [ ! -f fig.yml ] && return
+    fig stop
+    fig rm --force
+    popd &>/dev/null
+}
+
+fig_start() {
+    pushd ../ &>/dev/null
+    [ ! -f fig.yml ] && return
+    fig up -d
+    echo "Migrating data: fig run --rm gaptool ./bin/gaptool_server_migrate_0.5-0.6"
+    fig run --rm gaptool ./bin/gaptool_server_migrate_0.5-0.6
+    popd &>/dev/null
+}
+
 if [ $# -eq 1 ]; then
+    fig_config
+    fig_stop
+    rm -f $dest
     if [[ $1 == s3://* ]]; then
         if echo $1 | grep -q '*'; then
             echo "Searching for last backup in $1"
@@ -51,6 +78,7 @@ if [ $# -eq 1 ]; then
         chmod 666 $dest
         chmod 777 $dir
     fi
+    fig_start
 else
     echo "usage: $(basename $0) <backup_location>"
     echo ""
