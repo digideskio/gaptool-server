@@ -10,7 +10,7 @@ gaptool:
     ports:
       - "3000:3000"
     entrypoint: /opt/gaptool/scripts/fig_entry.rb
-    command: /opt/gaptool/bin/gaptool-server start
+    command: /opt/gaptool/bin/gaptool-server --listen 0.0.0.0:3000
 redis:
     image: redis:2.8.13
     ports:

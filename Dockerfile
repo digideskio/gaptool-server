@@ -14,17 +14,13 @@ RUN apt-get update && \
     update-alternatives --set gem /usr/bin/gem2.1 && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb
 
-# install the gem to get the deps, then remove
-RUN gem install --no-rdoc --no-ri gaptool-server && \
-    gem uninstall gaptool-server
-RUN gem install racksh
-
+RUN gem install racksh bundle
 RUN adduser gaptool --home /opt/gaptool --shell /bin/bash --disabled-password --gecos ""
+COPY Gemfile /opt/gaptool/Gemfile
+RUN cd /opt/gaptool && bundle install --system
 
 EXPOSE 3000
 WORKDIR /opt/gaptool
 ADD . /opt/gaptool
-RUN chown -R gaptool:gaptool /opt/gaptool
-
 USER gaptool
-CMD ["/opt/gaptool/bin/gaptool-server", "start"]
+CMD ["/opt/gaptool/bin/gaptool-server", "--listen=0.0.0.0:3000"]
