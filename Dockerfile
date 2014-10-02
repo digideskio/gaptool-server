@@ -15,7 +15,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb
 
 RUN gem install racksh bundle
-RUN adduser gaptool --home /opt/gaptool --shell /bin/bash --disabled-password --gecos ""
+RUN groupadd --gid 1200 gaptool
+RUN adduser gaptool --uid 1200 --gid 1200 --home /opt/gaptool --shell /bin/bash --disabled-password --gecos ""
 COPY Gemfile /opt/gaptool/Gemfile
 RUN cd /opt/gaptool && bundle install --system
 
