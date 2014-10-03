@@ -26,10 +26,11 @@ Gem::Specification.new do |s|
   s.summary = "gaptool-server for managing cloud resources"
 
   s.add_runtime_dependency 'sinatra', "~> 1.4"
-  s.add_runtime_dependency 'thin', "~> 1.6"
+  s.add_runtime_dependency 'thin', "~> 1.5"
   s.add_runtime_dependency 'redis', "~> 3.1"
   s.add_runtime_dependency 'aws-sdk', "~> 1.54"
   s.add_runtime_dependency 'net-ssh', "~> 2.9"
   s.add_runtime_dependency 'peach', "~> 0.5"
+  s.add_runtime_dependency 'airbrake', "~> 4.1"
 end
 
