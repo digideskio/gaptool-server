@@ -31,5 +31,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'aws-sdk', "~> 1.54"
   s.add_runtime_dependency 'net-ssh', "~> 2.9"
   s.add_runtime_dependency 'peach', "~> 0.5"
+  s.add_runtime_dependency 'airbrake', "~> 4.1"
 end
 
