@@ -12,3 +12,10 @@ describe "ping" do
     last_response.body.must_include "PONG"
   end
 end
+
+describe "unathenticated" do
+  it "should return 401 error" do
+    get '/'
+    assert_equal last_response.unauthorized?, true
+  end
+end

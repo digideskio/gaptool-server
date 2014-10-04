@@ -4,4 +4,6 @@ libpath = File.realpath(File.join(File.dirname(__FILE__), "..", "lib"))
 require 'minitest/autorun'
 require 'rack/test'
 require "#{libpath}/app.rb"
+require 'mock_redis'
+$redis = MockRedis.new
 
