@@ -1,4 +1,5 @@
 require 'json'
+require 'securerandom'
 
 module DataHelper
 
@@ -127,4 +128,21 @@ module DataHelper
     $redis.smembers("role:#{role}:apps")
   end
 
+  def useradd(user, key=nil)
+    key = SecureRandom.hex(64) unless key
+    $redis.hset('users', user, key)
+    {username: user, key: key}
+  end
+
+  def userdel(user)
+    $redis.hdel('users', user)
+  end
+
+  def users
+    $redis.hgetall('users')
+  end
+
+  def user(user)
+    {username: user, key: $redis.hget('users', user)}
+  end
 end
