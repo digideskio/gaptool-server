@@ -36,5 +36,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'pry', "~> 0.10"
 
   s.add_development_dependency 'rspec', '~> 3.1'
+  s.add_development_dependency 'mock_redis', '~> 0.13'
 end
 
