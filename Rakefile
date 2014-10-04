@@ -51,7 +51,7 @@ namespace :docker do
 
   desc "Run tests w/ docker"
   task :test => :up do
-    sys(%q(fig run gaptool rake test))
+    sys(%q(fig run --rm gaptool rake test))
   end
 
   desc "Stop docker containers"
@@ -67,10 +67,12 @@ namespace :docker do
   desc "Restart docker containers"
   task :restart => [:stop, :start]
 
-  desc "Stop and remove docker containers"
+  desc "Stop and remove docker containers (alias 'rm')"
   task :remove => :stop do
-    sys(%q(fig rm))
+    sys(%q(fig rm --force))
   end
+
+  task :rm => :remove
 
   desc "Recreate docker containers without building"
   task :recreate do
