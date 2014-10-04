@@ -52,8 +52,16 @@ desc "Start the shell"
 task :shell do
   exec "racksh #{Shellwords.join(ARGV[1..-1])}"
 end
+task :sh => :shell
 
 desc "Start the HTTP server"
 task :server do
   exec "unicorn #{Shellwords.join(ARGV[1..-1])}"
 end
+
+task :help do
+  puts "Available tasks"
+  exec "rake -T"
+end
+
+task :default => :help
