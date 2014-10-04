@@ -24,6 +24,7 @@ class GaptoolServer < Sinatra::Application
     end
     disable :sessions
     enable  :dump_errors
+    disable :show_exceptions
   end
 
   before do
