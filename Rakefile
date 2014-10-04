@@ -64,4 +64,8 @@ task :help do
   exec "rake -T"
 end
 
+task :test do
+  Dir.glob('./test/*_test.rb') { |f| require f }
+end
+
 task :default => :help
