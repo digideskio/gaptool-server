@@ -14,10 +14,12 @@ RUN apt-get update && \
     update-alternatives --set gem /usr/bin/gem2.1 && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb
 
-RUN gem install racksh bundle
+RUN gem install bundle
 RUN groupadd --gid 1200 gaptool
 RUN adduser gaptool --uid 1200 --gid 1200 --home /opt/gaptool --shell /bin/bash --disabled-password --gecos ""
 COPY Gemfile /opt/gaptool/Gemfile
+COPY gaptool-server.gemspec /opt/gaptool/gaptool-server.gemspec
+COPY VERSION /opt/gaptool/VERSION
 RUN cd /opt/gaptool && bundle install --system
 
 EXPOSE 3000

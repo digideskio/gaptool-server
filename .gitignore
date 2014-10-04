@@ -52,6 +52,7 @@ tools
 # For rubinius:
 #*.rbc
 *.gem
+Gemfile.lock
 
 redis_data/
 
