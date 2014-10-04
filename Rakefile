@@ -46,7 +46,40 @@ namespace :docker do
 
   desc "Push the release image to the Docker Hub"
   task :push => 'push:release'
+
+  task :up => [:build, :recreate]
+
+  desc "Run tests w/ docker"
+  task :test => :up do
+    sys(%q(fig run gaptool rake test))
+  end
+
+  desc "Stop docker containers"
+  task :stop do
+    sys(%q(fig stop))
+  end
+
+  desc "Start docker containers"
+  task :start do
+    sys(%q(fig start))
+  end
+
+  desc "Restart docker containers"
+  task :restart => [:stop, :start]
+
+  desc "Stop and remove docker containers"
+  task :remove => :stop do
+    sys(%q(fig rm))
+  end
+
+  desc "Recreate docker containers without building"
+  task :recreate do
+    sys(%q(fig up -d))
+  end
 end
+
+desc "Bring up docker containers"
+task :docker => 'docker:up'
 
 desc "Start the shell"
 task :shell do

@@ -36,10 +36,7 @@ build_cmd="docker build --rm --force-rm -t gild/gaptool:$tag ."
 echo "Building docker image: $build_cmd"
 $build_cmd
 
-# If we got a vX.Y.Z tag, set the 'latest' tag
-set +e
-echo $tag | $grep_cmd && additional_tags+=('latest')
-set -e
+additional_tags+=('latest')
 
 for (( i=0; i<${#additional_tags[@]}; i++ )) do
     t=${additional_tags[$i]}
