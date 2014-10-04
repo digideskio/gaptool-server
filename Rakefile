@@ -1,5 +1,12 @@
 # encoding: utf-8
 Dir.chdir(File.dirname(__FILE__))
+require_relative 'lib/helpers/data'
+require_relative 'lib/helpers/redis'
+class DataHelperIncluder
+  include DataHelper
+end
+
+DH = DataHelperIncluder.new
 $stdout.sync = true
 
 def sys(cmd)
@@ -77,6 +84,47 @@ namespace :docker do
   desc "Recreate docker containers without building"
   task :recreate do
     sys(%q(fig up -d))
+  end
+end
+
+namespace :user do
+  desc "Add a new user. rake user:create <username>"
+  task :create do
+    if ARGV[1].nil?
+      abort('rake user:create <username>')
+    end
+    puts DH.useradd(ARGV[1])[:key]
+  end
+
+  desc "Rename a user. rake user:rename <oldname> <newname>"
+  task :rename do
+    if ARGV[1].nil? || ARGV[2].nil
+      abort('Missing required arguments')
+    end
+    user = DH.user(ARGV[1])
+    DH.userdel(user[:username])
+    DH.adduser(ARGV[2], user[:key])
+    puts "User #{ARGV[1]} renamed to #{ARGV[2]}"
+  end
+
+  desc "Delete a user. rake user:delete <username>"
+  task :delete do
+    if ARGV[1].nil?
+      abort('rake user:delete <username>')
+    end
+    puts DH.userdel(ARGV[1])
+  end
+
+  desc "Set user key. rake user:setkey <username> <key>"
+  task :setkey do
+    if ARGV[1].nil? || ARGV[2].nil
+      abort('Missing required arguments')
+    end
+    user = DH.user(ARGV[1])
+    if user.nil?
+      abort('Unknown user')
+    end
+    puts DH.useradd(ARGV[1], ARGV[2])
   end
 end
 

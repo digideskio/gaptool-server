@@ -143,6 +143,7 @@ module DataHelper
   end
 
   def user(user)
-    {username: user, key: $redis.hget('users', user)}
+    userdesc = {username: user, key: $redis.hget('users', user)}
+    return userdesc[:key].nil? ? nil : userdesc
   end
 end
