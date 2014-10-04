@@ -7,3 +7,4 @@ gem 'aws-sdk', "~> 1.54"
 gem 'net-ssh', "~> 2.9"
 gem 'peach', "~> 0.5"
 gem 'airbrake'
+gem 'racksh'
