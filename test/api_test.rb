@@ -1,6 +1,4 @@
-require File.expand_path '../test_helper.rb', __FILE__
-
-include Rack::Test::Methods
+require_relative 'test_helper'
 
 describe "Test API" do
   before(:each) do
@@ -14,4 +12,6 @@ describe "Test API" do
     get '/', {}, {}
     expect(last_response.status).to eq(200)
   end
+
+
 end
