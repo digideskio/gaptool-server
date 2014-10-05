@@ -32,7 +32,7 @@ grep_cmd="grep -o -E 'v[0-9]+\.[0-9]+\.[0-9]+'"
 tag=$(git log -n1 --pretty=format:%h%d | \
       $grep_cmd || git rev-parse --abbrev-ref HEAD)
 
-build_cmd="docker build --rm --force-rm -t gild/gaptool:$tag ."
+build_cmd="docker build --rm -t gild/gaptool:$tag ."
 echo "Building docker image: $build_cmd"
 $build_cmd
 

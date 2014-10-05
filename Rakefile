@@ -24,13 +24,13 @@ end
 namespace :docker do
   namespace :build do
     task :image do
-      sys(['./scripts/build_docker_images.sh'])
+      sys(%w(./scripts/build_docker_images.sh))
       printimages
     end
 
     desc "Build the release image"
     task :release do
-      sys(['./scripts/build_docker_images.sh', '-t', 'release'])
+      sys(%w(./scripts/build_docker_images.sh -t release))
       printimages
     end
 
@@ -39,12 +39,12 @@ namespace :docker do
 
   namespace :push do
     task :release do
-      sys(['docker', 'push', 'gild/gaptool:release'])
+      sys(%w(docker push gild/gaptool:release))
     end
 
     desc 'Push all tags to the Docker Hub'
     task :all do
-      sys(['docker', 'push', 'gild/gaptool'])
+      sys(%w(docker push gild/gaptool))
     end
   end
 
@@ -58,17 +58,17 @@ namespace :docker do
 
   desc "Run tests w/ docker"
   task :test => :up do
-    sys(%q(fig run --rm gaptool rake test))
+    sys(%w(fig run --rm gaptool rake test))
   end
 
   desc "Stop docker containers"
   task :stop do
-    sys(%q(fig stop))
+    sys(%w(fig stop))
   end
 
   desc "Start docker containers"
   task :start do
-    sys(%q(fig start))
+    sys(%w(fig start))
   end
 
   desc "Restart docker containers"
@@ -76,14 +76,14 @@ namespace :docker do
 
   desc "Stop and remove docker containers (alias 'rm')"
   task :remove => :stop do
-    sys(%q(fig rm --force))
+    sys(%w(fig rm --force))
   end
 
   task :rm => :remove
 
   desc "Recreate docker containers without building"
   task :recreate do
-    sys(%q(fig up -d))
+    sys(%w(fig up -d))
   end
 end
 
