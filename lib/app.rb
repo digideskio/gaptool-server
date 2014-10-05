@@ -28,7 +28,7 @@ class GaptoolServer < Sinatra::Application
   end
 
   before do
-    if request.path_info != '/ping' && !ENV['DRYRUN']
+    if request.path_info != '/ping' && ENV['GAPTOOL_DISABLE_AUTH'].nil?
       error 401 unless $redis.hget('users', env['HTTP_X_GAPTOOL_USER']) == env['HTTP_X_GAPTOOL_KEY']
       error 401 unless env['HTTP_X_GAPTOOL_USER'] && env['HTTP_X_GAPTOOL_KEY']
     end
