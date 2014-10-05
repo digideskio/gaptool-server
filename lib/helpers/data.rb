@@ -6,8 +6,16 @@ module DataHelper
   def addserver(instance, data, secret)
     role = data['role']
     environment = data['environment']
-    if role.nil? or environment.nil?
-      raise
+    if role.nil? || environment.nil?
+      raise ArgumentError, "Missing role or environment"
+    end
+
+    if secret.nil? || secret.empty?
+      raise ArgumentError, "Missing/empty secret"
+    end
+
+    if instance.nil? || instance.empty?
+      raise ArgumentError, "Missing instance"
     end
 
     unless data['chef_runlist'].nil?
@@ -30,7 +38,7 @@ module DataHelper
     key = "instance:#{instance}"
     $redis.multi do
       $redis.del(key)
-      $redis.hmset("instance:#{instance}", *data.select{ |k,v| !v.nil? && v.is_a?(String) && !v.empty?}.flatten)
+      $redis.hmset(key, *data.select{ |k,v| !v.nil? && ((v.is_a?(String) && !v.empty?) || !!v == v)}.flatten)
     end
   end
 
@@ -59,8 +67,13 @@ module DataHelper
     $redis.hget('config', key)
   end
 
+  def set_config(key, value)
+    $redis.hset('config', key, value)
+  end
+
   def get_server_data(instance, opts={})
     rs = $redis.hgetall("instance:#{instance}")
+    return nil if rs.nil?
     rs['instance'] = instance
     if !rs['chef_runlist'].nil? && !rs['chef_runlist'].empty?
       rs['chef_runlist'] = JSON.parse rs['chef_runlist']
