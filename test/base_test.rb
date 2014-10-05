@@ -6,16 +6,26 @@ def app
   GaptoolServer
 end
 
-describe "ping" do
+describe "ping should work unauthenticated" do
   it "should return PONG" do
     get '/ping'
-    last_response.body.must_include "PONG"
+    expect(last_response.status).to eq(200)
+    expect(last_response.body).to eq("PONG")
   end
 end
 
-describe "unathenticated" do
+describe "unauthenticated" do
   it "should return 401 error" do
     get '/'
-    assert_equal last_response.unauthorized?, true
+    expect(last_response.status).to eq(401)
+  end
+end
+
+describe "authenticated" do
+  it "should return 200" do
+    auth do |h|
+      get '/', nil, h
+      expect(last_response.status).to eq(200)
+    end
   end
 end
