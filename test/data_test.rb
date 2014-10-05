@@ -1,6 +1,4 @@
-require File.expand_path '../test_helper.rb', __FILE__
-
-include Rack::Test::Methods
+require_relative 'test_helper'
 
 describe "Data helper tests" do
 

@@ -10,6 +10,7 @@ if ENV['COVERAGE']
   end
 end
 
+require 'rspec/core/rake_task'
 require_relative 'lib/helpers/data'
 require_relative 'lib/helpers/redis'
 
@@ -150,8 +151,8 @@ task :help do
   exec "rake -T"
 end
 
-task :test do
-  Dir.glob('./test/*_test.rb') { |f| require f }
+RSpec::Core::RakeTask.new :test do |task|
+  task.pattern = Dir['test/*_test.rb']
 end
 
 task :default => :help
