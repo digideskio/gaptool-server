@@ -1,7 +1,18 @@
 # encoding: utf-8
 Dir.chdir(File.dirname(__FILE__))
+if ENV['COVERAGE']
+  require 'simplecov'
+  SimpleCov.start do
+    add_filter '/test/'
+    add_group 'helpers', 'lib/helpers'
+    add_group 'routes', 'lib/routes'
+    add_group 'app', 'lib/app'
+  end
+end
+
 require_relative 'lib/helpers/data'
 require_relative 'lib/helpers/redis'
+
 class DataHelperIncluder
   include DataHelper
 end
