@@ -89,43 +89,35 @@ end
 
 namespace :user do
   desc "Add a new user. rake user:create <username>"
-  task :create do
-    if ARGV[1].nil?
-      abort('rake user:create <username>')
-    end
-    puts DH.useradd(ARGV[1])[:key]
+  task :create, [:username] do |t, args|
+    puts DH.useradd(args[:username])[:key]
   end
 
   desc "Rename a user. rake user:rename <oldname> <newname>"
-  task :rename do
-    if ARGV[1].nil? || ARGV[2].nil
-      abort('Missing required arguments')
-    end
-    user = DH.user(ARGV[1])
+  task :rename, [:oldname, :newname] do |t, args|
+    user = DH.user(args[:oldname])
+    abort("Unknown user #{args[:oldname]}") if user.nil?
     DH.userdel(user[:username])
-    DH.adduser(ARGV[2], user[:key])
-    puts "User #{ARGV[1]} renamed to #{ARGV[2]}"
+    DH.useradd(args[:newname], user[:key])
+    puts "User #{args[:oldname]} renamed to #{args[:newname]}"
   end
 
   desc "Delete a user. rake user:delete <username>"
-  task :delete do
-    if ARGV[1].nil?
-      abort('rake user:delete <username>')
-    end
-    puts DH.userdel(ARGV[1])
+  task :delete, [:username] do |t, args|
+    DH.userdel(args[:username])
   end
 
   desc "Set user key. rake user:setkey <username> <key>"
-  task :setkey do
-    if ARGV[1].nil? || ARGV[2].nil
-      abort('Missing required arguments')
-    end
-    user = DH.user(ARGV[1])
-    if user.nil?
-      abort('Unknown user')
-    end
-    puts DH.useradd(ARGV[1], ARGV[2])
+  task :setkey, [:username, :key] do |t, args|
+    user = DH.user(args[:username])
+    abort("Unknown user #{args[:username]}") if user.nil?
+    puts DH.useradd(args[:username], args[:key])
   end
+end
+
+desc "List users"
+task :user do
+  puts DH.users.keys.join(" ")
 end
 
 desc "Bring up docker containers"
