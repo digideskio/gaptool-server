@@ -6,14 +6,30 @@ class HTTPError < StandardError
   end
 
  def code
-   self.class.code
+    self.class.code
  end
 end
 
-class BadRequest < HTTPError
+class ClientError < HTTPError
   @code = 400
 end
 
-class Unauthenticated < BadRequest
+class BadRequest < ClientError
+  @code = 400
+end
+
+class Unauthenticated < ClientError
   @code = 401
+end
+
+class Forbidden < ClientError
+  @code = 403
+end
+
+class NotFound < ClientError
+  @code = 404
+end
+
+class Conflict < ClientError
+  @code = 409
 end
