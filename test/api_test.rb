@@ -55,6 +55,11 @@ describe "Test API" do
     end
   end
 
+  it "should fail for missing parameter to terminate" do
+    post '/terminate'
+    expect(last_response.status).to eq(400)
+  end
+
   it "should fail to terminate non-existing instance" do
     post '/terminate', {'id' => 'i-1234567'}.to_json
     expect(last_response.status).to eq(404)
@@ -75,6 +80,18 @@ describe "Test API" do
     post '/terminate', {'id' => id}.to_json
     expect(last_response.status).to eq(200)
     expect(JSON.parse(last_response.body)).to eq({id => {'status'=> 'terminated'}})
+  end
+
+  it "should fail to register a server" do
+    required_keys = %w(role environment secret)
+    hdata = host_data.select {|k, v| required_keys.include?(k)}
+    hdata['secret'] = 'mysecret'
+    required_keys.each do |key|
+      put '/register', hdata.select {|k,v| k != key}.to_json
+      expect(last_response.status).to eq(400)
+    end
+    put '/register', hdata.to_json
+    expect(last_response.status).to eq(403)
   end
 
 end
