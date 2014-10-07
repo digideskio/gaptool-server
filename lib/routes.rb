@@ -15,7 +15,7 @@ class GaptoolServer < Sinatra::Application
     # create shared secret to reference in /register
     secret = (0...8).map{65.+(rand(26)).chr}.join
     security_group = data['security_group'] || Gaptool::Data::get_role_data(data['role'])["security_group"]
-    sgid = Gaptool::Data::get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
+    sgid = Gaptool::EC2::get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
     image_id = data['ami'] || Gaptool::Data::get_ami_for_role(data['role'], data['zone'])
     data['chef_runlist'] = data['chef_runlist'].nil? ? Gaptool::Data::get_runlist_for_role(data['role']) : data['chef_runlist']
     data['terminate'] = data['terminate'].nil? ? true : !!data['terminate']
