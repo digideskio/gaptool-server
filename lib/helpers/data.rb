@@ -46,12 +46,11 @@ module Gaptool
     def self.register_server(role, environment, secret)
       key = "instances:secrets:#{role}:#{environment}:#{secret}"
       instance = $redis.get(key)
-      unless instance.nil?
-        $redis.hdel("instance:#{instance}", "registered")
-        $redis.srem('instances:unregistered', instance)
-        $redis.del(key)
-        instance
-      end
+      return nil if instance.nil? || instance.empty?
+      $redis.hdel("instance:#{instance}", "registered")
+      $redis.srem('instances:unregistered', instance)
+      $redis.del(key)
+      instance
     end
 
     def self.rmserver(instance)
