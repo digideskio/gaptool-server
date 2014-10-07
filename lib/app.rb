@@ -8,11 +8,22 @@ require 'openssl'
 require 'net/ssh'
 require 'peach'
 require 'airbrake'
+require_relative 'exceptions'
 
 class GaptoolServer < Sinatra::Application
 
+  def error_response
+    {result: 'error', message: env['sinatra.error'].message}.to_json
+  end
+
+  error HTTPError do
+    status env['sinatra.error'].code
+    error_response
+  end
+
   error do
-    {:result => 'error', :message => env['sinatra.error']}.to_json
+    status 500
+    error_response
   end
 
   configure do
@@ -32,6 +43,7 @@ class GaptoolServer < Sinatra::Application
       error 401 unless $redis.hget('users', env['HTTP_X_GAPTOOL_USER']) == env['HTTP_X_GAPTOOL_KEY']
       error 401 unless env['HTTP_X_GAPTOOL_USER'] && env['HTTP_X_GAPTOOL_KEY']
     end
+    content_type 'application/json'
   end
 end
 
