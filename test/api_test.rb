@@ -41,4 +41,11 @@ describe "Test API" do
     expect(JSON.parse(last_response.body).keys).to eq(['instance'])
   end
 
+  it "should fail to create a server" do
+    %w(role environment zone itype).each do |req|
+      post '/init', host_data.reject{|k, v| k == req}.to_json
+      expect(last_response.status).to eq(400)
+      expect(JSON.parse(last_response.body).keys).to eq(%w(result message))
+    end
+  end
 end
