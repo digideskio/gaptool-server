@@ -11,14 +11,10 @@ if ENV['COVERAGE']
 end
 
 require 'rspec/core/rake_task'
-require_relative 'lib/helpers/data'
 require_relative 'lib/helpers/redis'
+require_relative 'lib/helpers/init'
 
-class DataHelperIncluder
-  include DataHelper
-end
-
-DH = DataHelperIncluder.new
+DH = Gaptool::Data
 $stdout.sync = true
 
 def sys(cmd)

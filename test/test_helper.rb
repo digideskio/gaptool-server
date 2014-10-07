@@ -5,7 +5,6 @@ require 'rspec'
 require 'rack/test'
 require 'fakeredis/rspec'
 require "#{libpath}/app.rb"
-require "#{libpath}/helpers/data"
 
 RSpec.configure do |conf|
   conf.include Rack::Test::Methods
@@ -14,9 +13,6 @@ RSpec.configure do |conf|
   end
 end
 
-class DataHelperIncluder
-  include DataHelper
-end
-DH = DataHelperIncluder.new
+DH = Gaptool::Data
 
 $redis = Redis.new

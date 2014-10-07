@@ -41,4 +41,4 @@ class GaptoolServer < Sinatra::Application
 end
 
 require_relative 'helpers/init'
-require_relative 'routes/init'
+require_relative 'routes'
