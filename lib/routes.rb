@@ -44,7 +44,7 @@ class GaptoolServer < Sinatra::Application
     )
     # Add host tag
     Gaptool::Data::addserver(id, data, secret)
-    "{\"instance\":\"#{id}\"}"
+    json instance: id
   end
 
   post '/terminate' do
@@ -60,8 +60,7 @@ class GaptoolServer < Sinatra::Application
 
     Gaptool::EC2::terminate_ec2_instance(data['zone'], data['id'])
     rmserver(data['id'])
-    out = {data['id'] => {'status'=> 'terminated'}}
-    out.to_json
+    json data['id'] => {'status' => 'terminated'}
   end
 
   put '/register' do
@@ -93,7 +92,7 @@ class GaptoolServer < Sinatra::Application
     initkey = host_data['init_key']
     run_list = host_data['chef_runlist'].to_json
 
-    json = {
+    jdata = {
       'hostname' => hostname,
       'recipe' => 'init',
       'number' => instance_id,
@@ -112,14 +111,14 @@ class GaptoolServer < Sinatra::Application
       initkey: initkey,
       chef_branch: chef_branch,
       chef_repo: chef_repo,
-      json: json
+      json: jdata
     }
   end
 
   get '/hosts' do
-    servers.map do |inst|
+    json servers.map do |inst|
       Gaptool::Data::get_server_data inst
-    end.to_json
+    end
   end
 
   get '/apps' do
@@ -127,17 +126,17 @@ class GaptoolServer < Sinatra::Application
     apps.each do |app|
       out[app] = Gaptool::Data::get_app_data(app)
     end
-    out.to_json
+    json out
   end
 
   get '/hosts/:role' do
-    servers_in_role(params[:role]).map do |inst|
+    json servers_in_role(params[:role]).map do |inst|
       Gaptool::Data::get_server_data inst
-    end.to_json
+    end
   end
 
   get '/instance/:id' do
-    Gaptool::Data::get_server_data(params[:id]).to_json
+    json Gaptool::Data::get_server_data(params[:id])
   end
 
   get '/hosts/:role/:environment' do
@@ -146,31 +145,31 @@ class GaptoolServer < Sinatra::Application
     else
       list = Gaptool::Data::servers_in_role_env params[:role], params[:environment]
     end
-    list.map do |inst|
+    json list.map do |inst|
       Gaptool::Data::get_server_data inst
-    end.to_json
+    end
   end
 
   get '/host/:role/:environment/:instance' do
-    Gaptool::Data::get_server_data params[:instance]
+    json Gaptool::Data::get_server_data params[:instance]
   end
 
   get '/ssh/:role/:environment/:instance' do
     data = Gaptool::Data::get_server_data params[:instance]
     host = data['hostname']
     key, pubkey = Gaptool::EC2::putkey(host)
-    {'hostname' => host, 'key' => key, 'pubkey' => pubkey}.to_json
+    json hostname: host, key: key, pubkey: pubkey
   end
 
   get '/version' do
     version = File.read(File.realpath(
       File.join(File.dirname(__FILE__), "..", "..", 'VERSION')
     )).strip
-    return {"server_version" => version, "api" => {"v0"=> "/"}}.to_json
+    json server_version: version, api: {v0: "/"}
   end
 
   post '/rehash' do
-    Gaptool::Rehash::rehash().to_json
+    json Gaptool::Rehash::rehash()
   end
 
 end

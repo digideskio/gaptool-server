@@ -1,5 +1,6 @@
 # encoding: utf-8
 require 'sinatra'
+require 'sinatra/json'
 require 'json'
 require 'yaml'
 require 'erb'
@@ -11,11 +12,12 @@ require 'airbrake'
 require_relative 'exceptions'
 
 class GaptoolServer < Sinatra::Application
+  helpers Sinatra::JSON
 
   def error_response msg=''
     message = "#{env['sinatra.error'].message}"
     message = "#{msg} #{message}" unless msg.empty?
-    {result: 'error', message: message}.to_json
+    json result: 'error', message: message
   end
 
   error JSON::ParserError do
@@ -50,7 +52,6 @@ class GaptoolServer < Sinatra::Application
       raise Unauthenticated unless $redis.hget('users', env['HTTP_X_GAPTOOL_USER']) == env['HTTP_X_GAPTOOL_KEY']
       raise Unauthenticated unless env['HTTP_X_GAPTOOL_USER'] && env['HTTP_X_GAPTOOL_KEY']
     end
-    content_type 'application/json'
   end
 end
 

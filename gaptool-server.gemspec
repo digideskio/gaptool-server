@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
   s.summary = "gaptool-server for managing cloud resources"
 
   s.add_runtime_dependency 'sinatra', "~> 1.4"
+  s.add_runtime_dependency 'sinatra-contrib', "~> 1.4"
   s.add_runtime_dependency 'unicorn', "~> 4.8"
   s.add_runtime_dependency 'redis', "~> 3.1"
   s.add_runtime_dependency 'aws-sdk', "~> 1.54"

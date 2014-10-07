@@ -38,6 +38,7 @@ describe "Test API" do
   it "should create a server" do
     post '/init', host_data.to_json
     expect(last_response.status).to eq(200)
+    expect(last_response.content_type).to eq('application/json')
     expect(JSON.parse(last_response.body).keys).to eq(['instance'])
   end
 
