@@ -33,11 +33,6 @@ class GaptoolServer < Sinatra::Application
       error 401 unless env['HTTP_X_GAPTOOL_USER'] && env['HTTP_X_GAPTOOL_KEY']
     end
   end
-
-  helpers do
-    include Rack::Utils
-    alias_method :h, :escape_html
-  end
 end
 
 require_relative 'helpers/init'
