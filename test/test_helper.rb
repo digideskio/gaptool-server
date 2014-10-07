@@ -1,4 +1,13 @@
 ENV['RACK_ENV'] = 'test'
+if ENV['COVERAGE']
+  require 'simplecov'
+  SimpleCov.start do
+    add_filter '/test/'
+    add_group 'helpers', 'lib/helpers'
+    add_group 'routes', 'lib/routes.rb'
+    add_group 'app', 'lib/app.rb'
+  end
+end
 
 libpath = File.realpath(File.join(File.dirname(__FILE__), "..", "lib"))
 require 'rspec'

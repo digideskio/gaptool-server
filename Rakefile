@@ -1,14 +1,5 @@
 # encoding: utf-8
 Dir.chdir(File.dirname(__FILE__))
-if ENV['COVERAGE']
-  require 'simplecov'
-  SimpleCov.start do
-    add_filter '/test/'
-    add_group 'helpers', 'lib/helpers'
-    add_group 'routes', 'lib/routes'
-    add_group 'app', 'lib/app'
-  end
-end
 
 require 'rspec/core/rake_task'
 require_relative 'lib/helpers/redis'
