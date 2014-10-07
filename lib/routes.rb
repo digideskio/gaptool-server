@@ -1,4 +1,6 @@
 # encoding: utf-8
+require 'set'
+require_relative 'exceptions'
 class GaptoolServer < Sinatra::Application
 
   get '/' do
@@ -11,6 +13,12 @@ class GaptoolServer < Sinatra::Application
 
   post '/init' do
     data = JSON.parse request.body.read
+    data = data.delete_if { |k,v| v.nil? }
+    required_keys = %w(role environment zone itype).to_set
+    keys = data.keys.to_set
+    unless keys > required_keys
+      raise BadRequest, "Missing required_parameters: #{(required_keys - keys).to_a.join(" ")}"
+    end
 
     # create shared secret to reference in /register
     secret = (0...8).map{65.+(rand(26)).chr}.join
