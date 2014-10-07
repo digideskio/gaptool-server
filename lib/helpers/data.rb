@@ -74,7 +74,7 @@ module Gaptool
 
     def self.get_server_data(instance, opts={})
       rs = $redis.hgetall("instance:#{instance}")
-      return nil if rs.nil?
+      return nil if rs.nil? || rs.empty?
       rs['instance'] = instance
       if !rs['chef_runlist'].nil? && !rs['chef_runlist'].empty?
         rs['chef_runlist'] = JSON.parse rs['chef_runlist']
@@ -86,6 +86,11 @@ module Gaptool
       end
       if opts[:initkey]
         rs['initkey'] = get_config('initkey')
+      end
+      if !rs['terminate'].nil? && rs['terminate'] == "false"
+        rs['terminate'] = false
+      else
+        rs.delete('terminate')
       end
       rs
     end
