@@ -12,8 +12,15 @@ require_relative 'exceptions'
 
 class GaptoolServer < Sinatra::Application
 
-  def error_response
-    {result: 'error', message: env['sinatra.error'].message}.to_json
+  def error_response msg=''
+    message = "#{env['sinatra.error'].message}"
+    message = "#{msg} #{message}" unless msg.empty?
+    {result: 'error', message: message}.to_json
+  end
+
+  error JSON::ParserError do
+    status 400
+    error_response "Invalid data."
   end
 
   error HTTPError do
