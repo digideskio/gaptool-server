@@ -23,7 +23,7 @@ describe "Test API" do
       'role' => 'testrole',
       'environment' => 'testenv',
       'ami' => 'ami-1234567',
-      'chef_runlist' => 'recipe[myrecipe]',
+      'chef_runlist' => ['recipe[myrecipe]'],
       'terminate' => true,
       'zone' => 'my-zone-1a',
       'itype' => 'm1.type'
@@ -83,7 +83,7 @@ describe "Test API" do
   end
 
   it "should fail to register a server" do
-    required_keys = %w(role environment secret)
+    required_keys = %w(role zone environment secret)
     hdata = host_data.select {|k, v| required_keys.include?(k)}
     hdata['secret'] = 'mysecret'
     required_keys.each do |key|
@@ -92,6 +92,19 @@ describe "Test API" do
     end
     put '/register', hdata.to_json
     expect(last_response.status).to eq(403)
+  end
+
+  it "should register the server" do
+    post '/init', host_data.to_json
+    expect(last_response.status).to eq(200)
+    id = JSON.parse(last_response.body)['instance']
+    # there is no API to get the secret, get it from the database.
+    secret = Gaptool::Data::get_server_data(id)['secret']
+    put '/register', {'role' => host_data['role'],
+                      'environment' => host_data['environment'],
+                      'secret'=> secret,
+                      'zone'=> host_data['zone']}.to_json
+    expect(last_response.status).to eq(200)
   end
 
 end

@@ -27,7 +27,8 @@ describe "Data helper tests" do
       'instance' => 'i-1234567',
       'chef_repo' => 'myrepo',
       'chef_branch' => 'master',
-      'registered' => 'false'
+      'registered' => 'false',
+      'secret' => 'secret'
     }))
   end
 

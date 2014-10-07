@@ -31,6 +31,7 @@ module Gaptool
         data['registered'] = false
         $redis.sadd('instances:unregistered', instance)
         $redis.set("instances:secrets:#{data['role']}:#{data['environment']}:#{secret}", instance)
+        data['secret'] = secret
       end
       save_server_data instance, data
     end
@@ -47,6 +48,7 @@ module Gaptool
       key = "instances:secrets:#{role}:#{environment}:#{secret}"
       instance = $redis.get(key)
       return nil if instance.nil? || instance.empty?
+      $redis.hdel("instance:#{instance}", "secret")
       $redis.hdel("instance:#{instance}", "registered")
       $redis.srem('instances:unregistered', instance)
       $redis.del(key)
