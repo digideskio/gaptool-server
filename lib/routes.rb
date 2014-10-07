@@ -54,7 +54,7 @@ class GaptoolServer < Sinatra::Application
     raise Conflict, "Instance #{data['id']} cannot be terminated" if host_data['terminate'] == false
 
     Gaptool::EC2::terminate_ec2_instance(data['zone'], data['id'])
-    rmserver(data['id'])
+    Gaptool::Data::rmserver(data['id'])
     json data['id'] => {'status' => 'terminated'}
   end
 
