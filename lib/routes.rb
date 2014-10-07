@@ -3,6 +3,16 @@ require 'set'
 require_relative 'exceptions'
 class GaptoolServer < Sinatra::Application
 
+  def require_parameters(required_keys, data)
+    data = data.delete_if { |k,v| v.nil? }
+    required_keys = required_keys.to_set unless required_keys.is_a? Set
+    keys = data.keys.to_set
+    unless keys >= required_keys
+      raise BadRequest, "Missing required_parameters: #{(required_keys - keys).to_a.join(" ")}"
+    end
+    data
+  end
+
   get '/' do
     "You must be lost. Read the instructions."
   end
@@ -12,13 +22,8 @@ class GaptoolServer < Sinatra::Application
   end
 
   post '/init' do
-    data = JSON.parse request.body.read
-    data = data.delete_if { |k,v| v.nil? }
-    required_keys = %w(role environment zone itype).to_set
-    keys = data.keys.to_set
-    unless keys > required_keys
-      raise BadRequest, "Missing required_parameters: #{(required_keys - keys).to_a.join(" ")}"
-    end
+    data = require_parameters(%w(role environment zone itype),
+                              JSON.parse(request.body.read))
 
     # create shared secret to reference in /register
     secret = (0...8).map{65.+(rand(26)).chr}.join
@@ -48,7 +53,8 @@ class GaptoolServer < Sinatra::Application
   end
 
   post '/terminate' do
-    data = JSON.parse request.body.read
+    data = require_parameters(%w(id),
+                              JSON.parse(request.body.read))
     host_data = Gaptool::Data::get_server_data data['id']
     raise NotFound, "No such instance: #{data['id']}" if host_data.nil?
     raise Conflict, "Instance #{data['id']} cannot be terminated" if host_data['terminate'] == false
@@ -60,7 +66,9 @@ class GaptoolServer < Sinatra::Application
 
   put '/register' do
     data = JSON.parse request.body.read
-    instance_id = register_server data['role'], data['environment'], data['secret']
+    data = require_parameters(%w(role environment secret), data)
+    instance_id = Gaptool::Data::register_server data['role'], data['environment'], data['secret']
+
     raise Forbidden, "Can't register instance: wrong secret or missing role/environment" unless instance_id
 
     hostname = Gaptool::EC2::get_ec2_instance_data(data['zone'].chop, instance_id)[:hostname]
