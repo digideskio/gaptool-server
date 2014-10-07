@@ -4,8 +4,6 @@ if ENV['COVERAGE']
   SimpleCov.start do
     add_filter '/test/'
     add_group 'helpers', 'lib/helpers'
-    add_group 'routes', 'lib/routes.rb'
-    add_group 'app', 'lib/app.rb'
   end
 end
 
