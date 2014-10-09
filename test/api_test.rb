@@ -1,5 +1,6 @@
 require_relative 'test_helper'
 require 'json'
+require 'set'
 
 describe "Test API" do
   before(:all) do
@@ -15,6 +16,21 @@ describe "Test API" do
     header 'X_GAPTOOL_KEY',  'test'
     $redis.flushall
     DH.useradd('test', 'test')
+  end
+
+  def add_and_register_server data=nil
+    data ||= host_data
+    post '/init', data.to_json
+    expect(last_response.status).to eq(200)
+    id = JSON.parse(last_response.body)['instance']
+    # there is no API to get the secret, get it from the database.
+    secret = Gaptool::Data::get_server_data(id)['secret']
+    put '/register', {'role' => data['role'],
+                      'environment' => data['environment'],
+                      'secret'=> secret,
+                      'zone'=> data['zone']}.to_json
+    expect(last_response.status).to eq(200)
+    id
   end
 
   def host_data
@@ -95,16 +111,81 @@ describe "Test API" do
   end
 
   it "should register the server" do
-    post '/init', host_data.to_json
+    add_and_register_server
+  end
+
+  it "should find an host" do
+    id = add_and_register_server
+    get '/hosts'
     expect(last_response.status).to eq(200)
-    id = JSON.parse(last_response.body)['instance']
-    # there is no API to get the secret, get it from the database.
-    secret = Gaptool::Data::get_server_data(id)['secret']
-    put '/register', {'role' => host_data['role'],
-                      'environment' => host_data['environment'],
-                      'secret'=> secret,
-                      'zone'=> host_data['zone']}.to_json
+    exp_data = host_data.reject{|k,v| k == 'terminate'}
+    exp_data['instance'] = id
+    expect(JSON.parse(last_response.body)).to eq([exp_data])
+  end
+
+  it "should find two hosts" do
+    id1 = add_and_register_server
+    id2 = add_and_register_server
+    get '/hosts'
     expect(last_response.status).to eq(200)
+    exp_data = [
+      host_data.reject{|k,v| k == 'terminate'}.merge({'instance' => id1}),
+      host_data.reject{|k,v| k == 'terminate'}.merge({'instance' => id2})
+    ].to_set
+    expect(JSON.parse(last_response.body).to_set).to eq(exp_data)
+  end
+
+  it "should find an host by role" do
+    other = host_data.merge({'role' => 'otherrole'})
+    id1 = add_and_register_server other
+    id2 = add_and_register_server
+
+    get '/hosts/otherrole'
+    expect(last_response.status).to eq(200)
+    exp_data = [other.reject{|k,v| k == 'terminate'}.merge({'instance'=> id1})]
+    expect(JSON.parse(last_response.body)).to eq(exp_data)
+  end
+
+  it "should find an host by id" do
+    id = add_and_register_server
+    ["/instance/#{id}", "/host/testrole/testenv/#{id}", "/host/FAKE/FAKE/#{id}"].each do |url|
+      get url
+      expect(last_response.status).to eq(200)
+      exp_data = host_data.reject{|k,v| k == 'terminate'}.merge({'instance'=> id})
+      expect(JSON.parse(last_response.body)).to eq(exp_data)
+    end
+  end
+
+  it "should find all hosts by environment and role" do
+    id1 = add_and_register_server
+    id2 = add_and_register_server
+    id3 = add_and_register_server host_data.merge({'environment' => 'otherenv'})
+    id4 = add_and_register_server host_data.merge({'role' => 'otherrole'})
+    get '/hosts/testrole/testenv'
+    expect(last_response.status).to eq(200)
+    exp_data = [
+      host_data.reject{|k,v| k == 'terminate'}.merge({'instance' => id1}),
+      host_data.reject{|k,v| k == 'terminate'}.merge({'instance' => id2})
+    ].to_set
+    expect(JSON.parse(last_response.body).to_set).to eq(exp_data)
+
+    get '/hosts/ALL/testenv'
+    expect(last_response.status).to eq(200)
+    exp_data = [
+      host_data.reject{|k,v| k == 'terminate'}.merge({'instance' => id1}),
+      host_data.reject{|k,v| k == 'terminate'}.merge({'instance' => id2}),
+      host_data.reject{|k,v| k == 'terminate'}.merge({'instance' => id4, 'role'=> 'otherrole'})
+    ].to_set
+    expect(JSON.parse(last_response.body).to_set).to eq(exp_data)
+  end
+
+  it "should return the server version" do
+    version = File.read(File.realpath(
+      File.join(File.dirname(__FILE__), "..", 'VERSION')
+    )).strip
+    get "/version"
+    expect(last_response.status).to eq(200)
+    expect(JSON.parse(last_response.body)).to eq({"server_version" => version, "api" => {"v0" => "/"}})
   end
 
 end
