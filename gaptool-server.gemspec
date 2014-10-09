@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.summary = "gaptool-server for managing cloud resources"
+  s.required_ruby_version = '~> 2.1'
 
   s.add_runtime_dependency 'sinatra', "~> 1.4"
   s.add_runtime_dependency 'sinatra-contrib', "~> 1.4"
