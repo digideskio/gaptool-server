@@ -84,6 +84,7 @@ module Gaptool
         if rs[v].nil? || rs[v].empty?
           rs[v] = get_config(v.gsub(/_/, ''))
         end
+        rs.delete(v) if rs[v].nil? || rs[v].empty?
       end
       if opts[:initkey]
         rs['initkey'] = get_config('initkey')

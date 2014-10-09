@@ -78,7 +78,11 @@ class GaptoolServer < Sinatra::Application
     init_recipe = 'recipe[init]'
     run_list = [init_recipe]
     unless host_data['chef_runlist'].nil?
-      run_list = [*eval(host_data['chef_runlist'])]
+      if host_data['chef_runlist'].is_a? String
+        run_list = [*eval(host_data['chef_runlist'])]
+      else
+        run_list = host_data['chef_runlist']
+      end
       unless run_list.include? init_recipe
         run_list.unshift(init_recipe)
       end
@@ -120,9 +124,10 @@ class GaptoolServer < Sinatra::Application
   end
 
   get '/hosts' do
-    json servers.map do |inst|
+    servers = Gaptool::Data::servers.map do |inst|
       Gaptool::Data::get_server_data inst
     end
+    json servers
   end
 
   get '/apps' do
@@ -134,9 +139,10 @@ class GaptoolServer < Sinatra::Application
   end
 
   get '/hosts/:role' do
-    json servers_in_role(params[:role]).map do |inst|
+    servers =  Gaptool::Data::servers_in_role(params[:role]).map do |inst|
       Gaptool::Data::get_server_data inst
     end
+    json servers
   end
 
   get '/instance/:id' do
@@ -149,9 +155,11 @@ class GaptoolServer < Sinatra::Application
     else
       list = Gaptool::Data::servers_in_role_env params[:role], params[:environment]
     end
-    json list.map do |inst|
+    servers = list.map do |inst|
       Gaptool::Data::get_server_data inst
     end
+
+    json servers
   end
 
   get '/host/:role/:environment/:instance' do
@@ -167,7 +175,7 @@ class GaptoolServer < Sinatra::Application
 
   get '/version' do
     version = File.read(File.realpath(
-      File.join(File.dirname(__FILE__), "..", "..", 'VERSION')
+      File.join(File.dirname(__FILE__), "..", 'VERSION')
     )).strip
     json server_version: version, api: {v0: "/"}
   end
