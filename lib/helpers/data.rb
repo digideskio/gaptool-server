@@ -36,12 +36,17 @@ module Gaptool
       save_server_data instance, data
     end
 
-    def self.save_server_data(instance, data)
-      key = "instance:#{instance}"
-      $redis.multi do
-        $redis.del(key)
-        $redis.hmset(key, *data.select{ |k,v| !v.nil? && ((v.is_a?(String) && !v.empty?) || !!v == v)}.flatten)
+    def self.overwrite_hash(key, data)
+      if !key.nil? && !data.nil? && !data.empty?
+        $redis.multi do
+          $redis.del(key)
+          $redis.hmset(key, *data.select{ |k,v| !v.nil? && ((v.is_a?(String) && !v.empty?) || !!v == v)}.flatten)
+        end
       end
+    end
+
+    def self.save_server_data(instance, data)
+      overwrite_hash("instance:#{instance}", data)
     end
 
     def self.register_server(role, environment, secret)
@@ -97,10 +102,6 @@ module Gaptool
       rs
     end
 
-    def self.get_app_data(app)
-      $redis.hgetall("app:#{app}")
-    end
-
     def self.get_role_data(role)
       $redis.hgetall("role:#{role}")
     end
@@ -139,6 +140,15 @@ module Gaptool
 
     def self.roles
       Hash[$redis.smembers("roles").map {|r| [r, apps_in_role(r)] }]
+    end
+
+    def self.add_app(name, data)
+      overwrite_hash("app:#{name}", data)
+      $redis.sadd("apps", name)
+    end
+
+    def self.get_app_data(app)
+      $redis.hgetall("app:#{app}")
     end
 
     def self.apps
