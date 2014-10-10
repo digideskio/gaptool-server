@@ -57,7 +57,7 @@ unless File.exists?('/.dockerenv')
     task :up => [:build, :recreate]
 
     desc "Run tests w/ docker"
-    task :test => :up do
+    task :test => :build do
       sys(%w(fig run --rm gaptool rake test))
     end
 
