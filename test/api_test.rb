@@ -188,4 +188,15 @@ describe "Test API" do
     expect(JSON.parse(last_response.body)).to eq({"server_version" => version, "api" => {"v0" => "/"}})
   end
 
+  it "should return the list of apps" do
+    data = {"key1" => "v", "key2" => "v"}
+    DH.add_app("firstapp", data)
+    DH.add_app("secondapp", data)
+    apps_list = {"firstapp" => data, "secondapp" => data}
+    get "/apps"
+    expect(last_response.status).to eq(200)
+    expect(JSON.parse(last_response.body)).to eq(apps_list)
+
+  end
+
 end
