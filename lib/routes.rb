@@ -5,7 +5,7 @@ class GaptoolServer < Sinatra::Application
 
   def require_parameters(required_keys, data)
     data = data.delete_if { |k,v| v.nil? }
-    required_keys = required_keys.to_set unless required_keys.is_a? Set
+    required_keys = [*required_keys].to_set unless required_keys.is_a? Set
     keys = data.keys.to_set
     unless keys >= required_keys
       raise BadRequest, "Missing required_parameters: #{(required_keys - keys).to_a.join(" ")}"
@@ -30,7 +30,6 @@ class GaptoolServer < Sinatra::Application
     security_group = data['security_group'] || Gaptool::Data::get_role_data(data['role'])["security_group"]
     sgid = Gaptool::EC2::get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
     image_id = data['ami'] || Gaptool::Data::get_ami_for_role(data['role'], data['zone'])
-    data['chef_runlist'] = data['chef_runlist'].nil? ? Gaptool::Data::get_runlist_for_role(data['role']) : data['chef_runlist']
     data['terminate'] = data['terminate'].nil? ? true : !!data['terminate']
 
     id = Gaptool::EC2::create_ec2_instance(
@@ -53,7 +52,7 @@ class GaptoolServer < Sinatra::Application
   end
 
   post '/terminate' do
-    data = require_parameters(%w(id),
+    data = require_parameters("id",
                               JSON.parse(request.body.read))
     host_data = Gaptool::Data::get_server_data data['id']
     raise NotFound, "No such instance: #{data['id']}" if host_data.nil?
@@ -72,7 +71,6 @@ class GaptoolServer < Sinatra::Application
     raise Forbidden, "Can't register instance: wrong secret or missing role/environment" unless instance_id
 
     hostname = Gaptool::EC2::get_ec2_instance_data(data['zone'].chop, instance_id)[:hostname]
-    apps = Gaptool::Data::apps_in_role(data['role'])
     host_data = Gaptool::Data::get_server_data instance_id, initkey: true
 
     init_recipe = 'recipe[init]'
@@ -112,7 +110,7 @@ class GaptoolServer < Sinatra::Application
       'chefbranch' => chef_branch,
       'identity' => initkey,
       'appuser' => Gaptool::Data::get_config('appuser'),
-      'apps' => apps
+      'apps' => host_data['apps']
     }.to_json
 
     erb :init, locals: {

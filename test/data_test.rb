@@ -1,4 +1,5 @@
 require_relative 'test_helper'
+require 'json'
 
 describe "Data helper tests" do
 
@@ -90,5 +91,17 @@ describe "Data helper tests" do
       'chef_branch' => 'master',
       'initkey' => 'FAKEKEY'
     }))
+  end
+
+  it "should get the runlist for a node" do
+    DH.save_role_data("role", chef_runlist: ["recipe[myrecipe]"].to_json)
+    DH.addserver(instid, data, nil)
+    role = DH.get_role_data("role")
+    expect(role).to eq('chef_runlist' => ["recipe[myrecipe]"].to_json)
+    server = DH.get_server_data(instid)
+    expect(server).to eq(data.merge("instance" => instid,
+                                    "chef_runlist" => ["recipe[myrecipe]"],
+                                    "chef_repo" => "myrepo",
+                                    "chef_branch" => "master" ))
   end
 end

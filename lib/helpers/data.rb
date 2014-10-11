@@ -47,23 +47,32 @@ module Gaptool
 
     def self.register_server(role, environment, secret)
       key = "instances:secrets:#{role}:#{environment}:#{secret}"
-      instance = $redis.get(key)
-      return nil if instance.nil? || instance.empty?
-      $redis.hdel("instance:#{instance}", "secret")
-      $redis.hdel("instance:#{instance}", "registered")
-      $redis.srem('instances:unregistered', instance)
-      $redis.del(key)
+      instance = nil
+      $redis.watch(key) do
+        instance = $redis.get(key)
+        if !instance.nil? && !instance.empty?
+          $redis.multi do |m|
+            m.hdel("instance:#{instance}", "secret")
+            m.hdel("instance:#{instance}", "registered")
+            m.srem('instances:unregistered', instance)
+            m.del(key)
+          end
+        else
+          $redis.unwatch
+          instance = nil
+        end
+      end
       instance
     end
 
     def self.rmserver(instance)
       data = get_server_data instance
       return if data.nil?
-      $redis.multi do
-        $redis.srem("instances", instance)
-        $redis.srem("role:#{data['role']}:instances", instance)
-        $redis.srem("environment:#{data['environment']}:instances", instance)
-        $redis.del("instance:#{instance}")
+      $redis.multi do |m|
+        m.srem("instances", instance)
+        m.srem("role:#{data['role']}:instances", instance)
+        m.srem("environment:#{data['environment']}:instances", instance)
+        m.del("instance:#{instance}")
       end
       instance
     end
@@ -82,12 +91,13 @@ module Gaptool
       rs['instance'] = instance
       if !rs['chef_runlist'].nil? && !rs['chef_runlist'].empty?
         rs['chef_runlist'] = JSON.parse rs['chef_runlist']
+      else
+        rs['chef_runlist'] = get_runlist_for_role rs['role']
       end
       %w(chef_repo chef_branch).each do |v|
         if rs[v].nil? || rs[v].empty?
           rs[v] = get_config(v.gsub(/_/, ''))
         end
-        rs.delete(v) if rs[v].nil? || rs[v].empty?
       end
       if opts[:initkey]
         rs['initkey'] = get_config('initkey')
@@ -97,7 +107,12 @@ module Gaptool
       else
         rs.delete('terminate')
       end
-      rs
+      rs['apps'] = apps_in_role(rs['role'])
+      rs.delete_if {|k,v| v.nil? || (!!v != v && v.empty?)}
+    end
+
+    def self.save_role_data(role, data)
+      overwrite_hash("role:#{role}", data)
     end
 
     def self.get_role_data(role)
