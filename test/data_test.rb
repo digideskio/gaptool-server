@@ -93,7 +93,7 @@ describe "Data helper tests" do
     }))
   end
 
-  it "should get the runlist for a node" do
+  it "should get the runlist for a node from the role" do
     DH.save_role_data("role", chef_runlist: ["recipe[myrecipe]"].to_json)
     DH.addserver(instid, data, nil)
     role = DH.get_role_data("role")
@@ -103,5 +103,12 @@ describe "Data helper tests" do
                                     "chef_runlist" => ["recipe[myrecipe]"],
                                     "chef_repo" => "myrepo",
                                     "chef_branch" => "master" ))
+  end
+
+  it "shoud get the ami for a node from the role" do
+    DH.save_role_data("role", ami: 'ami-1234567')
+    DH.addserver(instid, data, nil)
+    role = DH.get_role_data("role")
+    expect(role).to eq('ami' => 'ami-1234567')
   end
 end

@@ -94,6 +94,7 @@ module Gaptool
       else
         rs['chef_runlist'] = get_runlist_for_role rs['role']
       end
+
       %w(chef_repo chef_branch).each do |v|
         if rs[v].nil? || rs[v].empty?
           rs[v] = get_config(v.gsub(/_/, ''))
