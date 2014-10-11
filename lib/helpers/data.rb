@@ -58,12 +58,14 @@ module Gaptool
 
     def self.rmserver(instance)
       data = get_server_data instance
-      unless data.nil?
+      return if data.nil?
+      $redis.multi do
         $redis.srem("instances", instance)
         $redis.srem("role:#{data['role']}:instances", instance)
         $redis.srem("environment:#{data['environment']}:instances", instance)
         $redis.del("instance:#{instance}")
       end
+      instance
     end
 
     def self.get_config(key)

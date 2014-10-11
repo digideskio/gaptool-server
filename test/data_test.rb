@@ -15,15 +15,18 @@ describe "Data helper tests" do
     }
   end
 
+  def instid
+    'i-1234567'
+  end
+
   it "should add a server" do
     expect { DH.addserver("i-1234567", {}, "secret") }.to raise_error(ArgumentError)
     expect { DH.addserver('', data, "secret") }.to raise_error(ArgumentError)
 
-    DH.addserver('i-1234567', data, "secret")
-    server = DH.get_server_data('i-1234567')
-    expect(server).not_to be(nil)
+    DH.addserver(instid, data, "secret")
+    server = DH.get_server_data(instid)
     expect(server).to eq(data.merge({
-      'instance' => 'i-1234567',
+      'instance' => instid,
       'chef_repo' => 'myrepo',
       'chef_branch' => 'master',
       'registered' => 'false',
@@ -31,14 +34,61 @@ describe "Data helper tests" do
     }))
   end
 
+  it "should add a registered server" do
+    DH.addserver(instid, data, nil)
+    server = DH.get_server_data(instid)
+    expect(server).to eq(data.merge({
+      'instance' => instid,
+      'chef_repo' => 'myrepo',
+      'chef_branch' => 'master'
+    }))
+  end
+
   it "should register a server" do
-    DH.addserver('i-1234567', data, "secret")
+    DH.addserver(instid, data, "secret")
     res = DH.register_server(data['role'], data['environment'], '')
     expect(res).to be(nil)
 
     res = DH.register_server(data['role'], data['environment'], 'secret')
-    expect(res).to eq('i-1234567')
-    server = DH.get_server_data('i-1234567')
-    expect(server['registered']).to be(nil)
+    expect(res).to eq(instid)
+    server = DH.get_server_data(instid)
+    expect(server).to eq(data.merge({
+      'instance' => instid,
+      'chef_repo' => 'myrepo',
+      'chef_branch' => 'master'
+    }))
+  end
+
+  it "should remove a server" do
+    DH.addserver(instid, data, 'secret')
+    res = DH.register_server(data['role'], data['environment'], 'secret')
+    res = DH.rmserver(instid)
+    expect(res).to eq(instid)
+    server = DH.get_server_data(instid)
+    expect(server).to be(nil)
+
+    res = DH.rmserver(instid)
+    expect(res).to be(nil)
+  end
+
+  it "should set a config" do
+    c = DH.get_config('fakekey')
+    expect(c).to be(nil)
+
+    DH.set_config('fakekey', 'value')
+    c = DH.get_config('fakekey')
+    expect(c).to eq('value')
+  end
+
+  it "should return the initkey" do
+    DH.set_config('initkey', 'FAKEKEY')
+    DH.addserver(instid, data, nil)
+    server = DH.get_server_data(instid, initkey: true)
+    expect(server).to eq(data.merge({
+      'instance' => instid,
+      'chef_repo' => 'myrepo',
+      'chef_branch' => 'master',
+      'initkey' => 'FAKEKEY'
+    }))
   end
 end
