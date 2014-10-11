@@ -11,10 +11,6 @@ module Gaptool
         raise ArgumentError, "Missing role or environment"
       end
 
-      if secret.nil? || secret.empty?
-        raise ArgumentError, "Missing/empty secret"
-      end
-
       if instance.nil? || instance.empty?
         raise ArgumentError, "Missing instance"
       end
@@ -142,13 +138,34 @@ module Gaptool
       Hash[$redis.smembers("roles").map {|r| [r, apps_in_role(r)] }]
     end
 
-    def self.add_app(name, data)
-      overwrite_hash("app:#{name}", data)
-      $redis.sadd("apps", name)
+    def self.add_app(name, role)
+      return if name.nil? || role.nil?
+      $redis.multi do
+        $redis.sadd("apps", name)
+        $redis.sadd("role:#{role}:apps", name)
+        $redis.set("app:#{name}", role)
+      end
+    end
+
+    def self.remove_app(name)
+      return if name.nil?
+      key = "app:#{name}"
+      $redis.watch(key) do
+        role = $redis.get(key)
+        if !role.nil?
+          $redis.multi do |m|
+            m.del(key)
+            m.srem("apps", name)
+            m.srem("role:#{role}")
+          end
+        else
+          $redis.unwatch
+        end
+      end
     end
 
     def self.get_app_data(app)
-      $redis.hgetall("app:#{app}")
+      {"role" => $redis.get("app:#{app}")}
     end
 
     def self.apps

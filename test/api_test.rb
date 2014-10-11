@@ -189,14 +189,12 @@ describe "Test API" do
   end
 
   it "should return the list of apps" do
-    data = {"key1" => "v", "key2" => "v"}
-    DH.add_app("firstapp", data)
-    DH.add_app("secondapp", data)
-    apps_list = {"firstapp" => data, "secondapp" => data}
+    DH.add_app("firstapp", "testrole")
+    DH.add_app("secondapp", "testrole")
+    apps_list = {"firstapp" => {"role" => "testrole"},
+                 "secondapp" =>{"role" => "testrole"}}
     get "/apps"
     expect(last_response.status).to eq(200)
     expect(JSON.parse(last_response.body)).to eq(apps_list)
-
   end
-
 end

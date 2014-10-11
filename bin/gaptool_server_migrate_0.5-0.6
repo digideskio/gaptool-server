@@ -7,8 +7,9 @@ libpath = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
 $:.unshift(libpath)
 require "#{libpath}/helpers/redis"
 require "#{libpath}/helpers/data"
-include DataHelper
+DH = Gaptool::Data
 
+puts "Removing cruft"
 # First, remove cruft. Like all servers created but never registered, etc
 ['instance:*', '_*', 'apikey:*', 'service:*', 'running', 'ec2*',
  'failover', 'capacity', 'sg:*'].each do |pattern|
@@ -17,30 +18,31 @@ include DataHelper
   end
 end
 
-# get info for all applications and convert to new struct
+puts "Migrating apps..."
 $redis.keys('app:*').each do |key|
   appname = key.sub('app:', '')
-  $redis.sadd('apps', appname)
   role = $redis.hget(key, "role")
-  unless role.nil?
-    $redis.sadd("role:#{role}:apps", appname)
+  if role.nil? || appname.nil?
+    puts "Missing info for app: #{appname} role: #{role}"
   end
   $redis.del(key)
+  DH.add_app(appname, role) unless role.nil?
 end
 
-# convert hosts
+puts "Migrating instances..."
 $redis.keys('host:*').each do |key|
   pfx, role, env, iid = key.split(':')
   data = $redis.hgetall(key)
   data['role'] = role
   $redis.sadd('roles', role)
   data['environment'] = env
-  addserver(iid, data, nil)
+  DH.addserver(iid, data, nil)
   $redis.del(key)
   # remove stale keys from hsh
   $redis.hdel "instance:#{iid}", ["capacity", "mirror", "secret", 'instance']
 end
 
+puts "Removing unneeded info from instance data..."
 $redis.smembers('instances').each do |inst|
   $redis.hdel "instance:#{inst}", ["capacity", "mirror", "secret", "instance"]
   if $redis.hget("instance:#{inst}", 'chef_runlist') == "recipe[init]"

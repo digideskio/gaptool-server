@@ -18,7 +18,6 @@ describe "Data helper tests" do
   it "should add a server" do
     expect { DH.addserver("i-1234567", {}, "secret") }.to raise_error(ArgumentError)
     expect { DH.addserver('', data, "secret") }.to raise_error(ArgumentError)
-    expect { DH.addserver("i-1234567", data, nil) }.to raise_error(ArgumentError)
 
     DH.addserver('i-1234567', data, "secret")
     server = DH.get_server_data('i-1234567')
