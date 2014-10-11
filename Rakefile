@@ -153,7 +153,7 @@ end
 
 desc "List users"
 task :user do
-  puts DH.users.keys.join(" ")
+  puts DH.users.keys.sort.join("\n")
 end
 
 desc "List apps"
