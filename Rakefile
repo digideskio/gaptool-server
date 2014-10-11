@@ -1,6 +1,7 @@
 # encoding: utf-8
 Dir.chdir(File.dirname(__FILE__))
 
+require 'shellwords'
 require 'rspec/core/rake_task'
 require_relative 'lib/helpers/redis'
 require_relative 'lib/helpers/init'
@@ -14,6 +15,7 @@ def sys(cmd)
       puts f.gets
     end
   end
+  $?.to_i
 end
 
 def printimages
@@ -85,7 +87,18 @@ unless File.exists?('/.dockerenv')
     task :recreate do
       sys(%w(fig up -d))
     end
+
+    desc "Run a command in the docker container"
+    task :run do
+      exit sys(%W(fig run --rm gaptool #{ARGV[1..-1].shelljoin}))
+    end
+
+    desc "Run a rake task inside the docker container"
+    task :rake do
+      exit sys(%W(fig run --rm gaptool rake #{ARGV[1..-1].shelljoin}))
+    end
   end
+
   desc "Bring up docker containers"
   task :docker => 'docker:up'
 end
@@ -118,9 +131,38 @@ namespace :user do
   end
 end
 
+namespace :app do
+  desc "Add an application"
+  task :add, [:app, :role] do |t, args|
+    abort("Missing parameters") if args[:app].nil? || args[:app].empty? || args[:role].nil? || args[:role].empty?
+    ex = DH.get_app_data(args[:app])
+    unless ex.nil?
+      puts "Updating application #{args[:app]}" unless ex.nil?
+      DH.remove_app(args[:app])
+    end
+    DH.add_app(args[:app], args[:role])
+    puts "Added app #{args[:app]} in role #{args[:role]}"
+  end
+
+  desc "Remove an application"
+  task :delete, [:app] do |t, args|
+    DH.remove_app(args[:app])
+    puts "Removed app #{args[:app]}"
+  end
+end
+
 desc "List users"
 task :user do
   puts DH.users.keys.join(" ")
+end
+
+desc "List apps"
+task :app do
+  puts "Apps:"
+  DH.apps.each do |app|
+    info = DH.get_app_data(app)
+    puts " * #{app} => #{info["role"]}"
+  end
 end
 
 desc "Start the shell"
