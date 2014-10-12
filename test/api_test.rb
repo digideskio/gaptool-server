@@ -78,6 +78,15 @@ describe "Test API" do
     expect(resp.keys).to_not include("ami")
   end
 
+  it "should get the ami from global conf" do
+    DH.set_amis({'my-zone-1' => 'ami-default'})
+    res = add_and_register_server(host_data.reject{|k,v| k == 'ami'})
+    expect(res['ami']).to eq('ami-default')
+    get "/host/testrole/testenv/#{res['instance']}"
+    resp = JSON.parse(last_response.body)
+    expect(resp.keys).to_not include("ami")
+  end
+
   it "should fail to parse client data" do
     post '/init', host_data
     expect(last_response.status).to eq(400)

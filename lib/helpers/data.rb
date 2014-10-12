@@ -136,7 +136,7 @@ module Gaptool
     end
 
     def self.set_amis(amis)
-      overwrite_hash(amis)
+      overwrite_hash("amis", amis)
     end
 
     def self.zones
