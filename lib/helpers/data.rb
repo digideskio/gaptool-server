@@ -113,6 +113,10 @@ module Gaptool
     end
 
     def self.save_role_data(role, data)
+      if !data.nil? && data['amis']
+        amis = data.delete("amis") || {}
+        overwrite_hash("amis:#{role}", amis)
+      end
       overwrite_hash("role:#{role}", data)
     end
 
@@ -120,9 +124,8 @@ module Gaptool
       $redis.hgetall("role:#{role}")
     end
 
-    def self.get_ami_for_role(role, zone)
-      zone = zone.chop
-      $redis.hget("amis:#{role}", zone) || $redis.hget("amis", zone)
+    def self.get_ami_for_role(role, region)
+      $redis.hget("amis:#{role}", region) || $redis.hget("amis", region)
     end
 
     def self.get_runlist_for_role(role)
@@ -130,6 +133,10 @@ module Gaptool
       unless rl.nil?
         JSON.parse rl
       end
+    end
+
+    def self.set_amis(amis)
+      overwrite_hash(amis)
     end
 
     def self.zones

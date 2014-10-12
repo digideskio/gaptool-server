@@ -22,7 +22,9 @@ describe "Test API" do
     data ||= host_data
     post '/init', data.to_json
     expect(last_response.status).to eq(200)
-    id = JSON.parse(last_response.body)['instance']
+    res = JSON.parse(last_response.body)
+    id = res['instance']
+    secret = res['secret']
     # there is no API to get the secret, get it from the database.
     secret = Gaptool::Data::get_server_data(id)['secret']
     put '/register', {'role' => data['role'],
@@ -30,7 +32,7 @@ describe "Test API" do
                       'secret'=> secret,
                       'zone'=> data['zone']}.to_json
     expect(last_response.status).to eq(200)
-    id
+    res
   end
 
   def host_data
@@ -55,7 +57,25 @@ describe "Test API" do
     post '/init', host_data.to_json
     expect(last_response.status).to eq(200)
     expect(last_response.content_type).to eq('application/json')
-    expect(JSON.parse(last_response.body).keys).to eq(['instance'])
+    expect(JSON.parse(last_response.body).keys).to eq(["instance", "ami", "role", "environment", "secret", "terminate", "security_group"])
+  end
+
+  it "should get the runlist from the role" do
+    DH.save_role_data(host_data['role'], chef_runlist: ['recipe[other]'].to_json)
+    id = add_and_register_server(host_data.reject{|k,v| k == 'chef_runlist'})['instance']
+    get "/host/testrole/testenv/#{id}"
+    resp = JSON.parse(last_response.body)
+    expect(resp.keys).to include("chef_runlist")
+    expect(resp['chef_runlist']).to eq(['recipe[other]'])
+  end
+
+  it "should get the ami from the role" do
+    DH.save_role_data(host_data['role'], 'amis' => {'my-zone-1' => 'ami-other'})
+    res = add_and_register_server(host_data.reject{|k,v| k == 'ami'})
+    expect(res['ami']).to eq('ami-other')
+    get "/host/testrole/testenv/#{res['instance']}"
+    resp = JSON.parse(last_response.body)
+    expect(resp.keys).to_not include("ami")
   end
 
   it "should fail to parse client data" do
@@ -115,7 +135,7 @@ describe "Test API" do
   end
 
   it "should find an host" do
-    id = add_and_register_server
+    id = add_and_register_server()['instance']
     get '/hosts'
     expect(last_response.status).to eq(200)
     exp_data = host_data.reject{|k,v| k == 'terminate'}
@@ -124,8 +144,8 @@ describe "Test API" do
   end
 
   it "should find two hosts" do
-    id1 = add_and_register_server
-    id2 = add_and_register_server
+    id1 = add_and_register_server()['instance']
+    id2 = add_and_register_server()['instance']
     get '/hosts'
     expect(last_response.status).to eq(200)
     exp_data = [
@@ -137,8 +157,8 @@ describe "Test API" do
 
   it "should find an host by role" do
     other = host_data.merge({'role' => 'otherrole'})
-    id1 = add_and_register_server other
-    id2 = add_and_register_server
+    id1 = add_and_register_server(other)['instance']
+    id2 = add_and_register_server()['instance']
 
     get '/hosts/otherrole'
     expect(last_response.status).to eq(200)
@@ -147,7 +167,7 @@ describe "Test API" do
   end
 
   it "should find an host by id" do
-    id = add_and_register_server
+    id = add_and_register_server()['instance']
     ["/instance/#{id}", "/host/testrole/testenv/#{id}", "/host/FAKE/FAKE/#{id}"].each do |url|
       get url
       expect(last_response.status).to eq(200)
@@ -157,10 +177,10 @@ describe "Test API" do
   end
 
   it "should find all hosts by environment and role" do
-    id1 = add_and_register_server
-    id2 = add_and_register_server
-    id3 = add_and_register_server host_data.merge({'environment' => 'otherenv'})
-    id4 = add_and_register_server host_data.merge({'role' => 'otherrole'})
+    id1 = add_and_register_server()['instance']
+    id2 = add_and_register_server()['instance']
+    id3 = add_and_register_server(host_data.merge({'environment' => 'otherenv'}))['instance']
+    id4 = add_and_register_server(host_data.merge({'role' => 'otherrole'}))['instance']
     get '/hosts/testrole/testenv'
     expect(last_response.status).to eq(200)
     exp_data = [

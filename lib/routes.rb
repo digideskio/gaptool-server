@@ -1,4 +1,5 @@
 # encoding: utf-8
+require 'securerandom'
 require 'set'
 require_relative 'exceptions'
 class GaptoolServer < Sinatra::Application
@@ -25,11 +26,10 @@ class GaptoolServer < Sinatra::Application
     data = require_parameters(%w(role environment zone itype),
                               JSON.parse(request.body.read))
 
-    # create shared secret to reference in /register
-    secret = (0...8).map{65.+(rand(26)).chr}.join
+    secret = SecureRandom.hex(12)
     security_group = data['security_group'] || Gaptool::Data::get_role_data(data['role'])["security_group"]
     sgid = Gaptool::EC2::get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
-    image_id = data['ami'] || Gaptool::Data::get_ami_for_role(data['role'], data['zone'])
+    image_id = data['ami'] || Gaptool::Data::get_ami_for_role(data['role'], data['zone'].chop)
     data['terminate'] = data['terminate'].nil? ? true : !!data['terminate']
 
     id = Gaptool::EC2::create_ec2_instance(
@@ -48,7 +48,13 @@ class GaptoolServer < Sinatra::Application
     )
     # Add host tag
     Gaptool::Data::addserver(id, data, secret)
-    json instance: id
+    json({instance: id,
+          ami: image_id,
+          role: data['role'],
+          environment: data['environment'],
+          secret: secret,
+          terminate: data['terminate'],
+          security_group: sgid})
   end
 
   post '/terminate' do
