@@ -136,19 +136,28 @@ module Gaptool
     end
 
     def self.save_role_data(role, data)
-      if !data.nil? && data['amis']
+      return if role.nil? || data.nil?
+      if data['amis']
         amis = data.delete("amis") || {}
-        overwrite_hash("amis:#{role}", amis)
+        overwrite_hash("role:#{role}:amis", amis)
+      end
+      if data['apps']
+        apps = data.delete("apps") || []
+        apps.each {|a| add_app(a, role)}
       end
       overwrite_hash("role:#{role}", data)
+      $redis.sadd("roles", role)
     end
 
     def self.get_role_data(role)
-      $redis.hgetall("role:#{role}")
+      res = $redis.hgetall("role:#{role}")
+      res['apps'] = apps_in_role(role)
+      res['amis'] = $redis.hgetall("role:#{role}:amis")
     end
 
-    def self.get_ami_for_role(role, region)
-      $redis.hget("amis:#{role}", region) || $redis.hget("amis", region)
+    def self.get_ami_for_role(role, region=nil)
+
+      $redis.hget("role:#{role}:amis", region) || $redis.hget("amis", region)
     end
 
     def self.get_runlist_for_role(role)

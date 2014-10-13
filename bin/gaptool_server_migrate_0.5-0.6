@@ -18,8 +18,34 @@ puts "Removing cruft"
   end
 end
 
+puts "Migrating roles..."
+$redis.keys('role:*').each do |key|
+  puts " - #{key}"
+  data = $redis.hgetall(key)
+  role = key.sub('role:', '')
+  unless data['ami'].nil?
+    # We didn't have per-regin ami in roles, so
+    # default to us-west-2
+    data['amis'] = {'us-west-2' => data['ami']}
+    role.delete('ami')
+  end
+  DH.save_role_data(role, data)
+end
+
+puts "Migrating ami info to role..."
+$redis.keys('amis:*').each do |key|
+  role = key.sub("amis:", '')
+  puts " - #{key}"
+  amis = $redis.hgetall(key)
+  roledata = DH.get_role_data(role)
+  roledata['amis'] = amis.merge(roledata['amis'] || {})
+  DH.save_role_data(role, roledata)
+  $redis.del(key)
+end
+
 puts "Migrating apps..."
 $redis.keys('app:*').each do |key|
+  puts " - #{key}"
   appname = key.sub('app:', '')
   role = $redis.hget(key, "role")
   if role.nil? || appname.nil?
@@ -31,10 +57,10 @@ end
 
 puts "Migrating instances..."
 $redis.keys('host:*').each do |key|
+  puts " - #{key}"
   pfx, role, env, iid = key.split(':')
   data = $redis.hgetall(key)
   data['role'] = role
-  $redis.sadd('roles', role)
   data['environment'] = env
   DH.addserver(iid, data, nil)
   $redis.del(key)
