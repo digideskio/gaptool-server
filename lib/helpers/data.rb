@@ -4,6 +4,14 @@ require 'securerandom'
 module Gaptool
   module Data
 
+    def self.init_recipe
+      'recipe[init]'
+    end
+
+    def self.default_runlist
+      [init_recipe]
+    end
+
     def self.addserver(instance, data, secret)
       role = data['role']
       environment = data['environment']
@@ -13,11 +21,6 @@ module Gaptool
 
       if instance.nil? || instance.empty?
         raise ArgumentError, "Missing instance"
-      end
-
-      unless data['chef_runlist'].nil?
-        data['chef_runlist'] = [*data['chef_runlist']]
-        data['chef_runlist'] = data['chef_runlist'].to_json
       end
 
       $redis.sadd("instances", instance)
@@ -42,6 +45,19 @@ module Gaptool
     end
 
     def self.save_server_data(instance, data)
+
+      unless data['chef_runlist'].nil?
+        data['chef_runlist'] = [*data['chef_runlist']]
+        unless data['chef_runlist'].include? init_recipe
+          data['chef_runlist'].unshift(init_recipe)
+        end
+
+        if data['chef_runlist'] == default_runlist
+          data.delete('chef_runlist')
+        else
+          data['chef_runlist'] = data['chef_runlist'].to_json
+        end
+      end
       overwrite_hash("instance:#{instance}", data)
     end
 
@@ -100,14 +116,21 @@ module Gaptool
           rs[v] = get_config(v.gsub(/_/, ''))
         end
       end
+
       if opts[:initkey]
         rs['initkey'] = get_config('initkey')
       end
+
       if !rs['terminate'].nil? && rs['terminate'] == "false"
         rs['terminate'] = false
       else
         rs.delete('terminate')
       end
+
+      if opts[:force_runlist] && rs['chef_runlist'].nil?
+        rs['chef_runlist'] = default_runlist
+      end
+
       rs['apps'] = apps_in_role(rs['role'])
       rs.delete_if {|k,v| v.nil? || (!!v != v && v.empty?)}
     end
@@ -130,9 +153,10 @@ module Gaptool
 
     def self.get_runlist_for_role(role)
       rl = $redis.hget("role:#{role}", "chef_runlist")
-      unless rl.nil?
-        JSON.parse rl
-      end
+      return nil if rl.nil?
+      rl = JSON.parse rl
+      return nil if rl == default_runlist
+      rl
     end
 
     def self.set_amis(amis)

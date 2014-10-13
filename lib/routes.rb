@@ -77,26 +77,7 @@ class GaptoolServer < Sinatra::Application
     raise Forbidden, "Can't register instance: wrong secret or missing role/environment" unless instance_id
 
     hostname = Gaptool::EC2::get_ec2_instance_data(data['zone'].chop, instance_id)[:hostname]
-    host_data = Gaptool::Data::get_server_data instance_id, initkey: true
-
-    init_recipe = 'recipe[init]'
-    run_list = [init_recipe]
-    unless host_data['chef_runlist'].nil?
-      if host_data['chef_runlist'].is_a? String
-        run_list = [*eval(host_data['chef_runlist'])]
-      else
-        run_list = host_data['chef_runlist']
-      end
-      unless run_list.include? init_recipe
-        run_list.unshift(init_recipe)
-      end
-      data['chef_runlist'] = run_list.to_json
-    end
-
-    if run_list.length == 1 && run_list[0] == init_recipe
-      host_data.delete('chef_runlist')
-      Gaptool::Data::save_server_data instance_id host_data
-    end
+    host_data = Gaptool::Data::get_server_data instance_id, initkey: true, force_runlist: true
 
     chef_repo = host_data['chef_repo']
     chef_branch = host_data['chef_branch']
