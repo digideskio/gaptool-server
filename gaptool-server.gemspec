@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "VERSION"
   ]
-  s.files = `git ls-files | grep lib`.split("\n")
+  s.files = `git ls-files | grep -E '(lib|tasks|test)'`.split("\n")
   s.files.concat ['config.ru', 'Rakefile', 'Gemfile']
   s.homepage = "http://github.com/gild/gaptool-server"
   s.licenses = ["MIT"]
@@ -42,4 +42,3 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'fakeredis', '~> 0.5'
   s.add_development_dependency 'simplecov', '~> 0.9'
 end
-
