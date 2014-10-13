@@ -76,4 +76,15 @@ $redis.smembers('instances').each do |inst|
   end
 end
 
+puts "Removing old config keys"
+['remoteredis:host', 'remoteredis:port'].each do |key|
+  $redis.hdel 'config', key
+end
+
+puts "Rename old config keys"
+$redis.hset('config', 'chef_repo', $redis.hget('config', 'chefrepo'))
+$redis.hset('config', 'chef_branch', $redis.hget('config', 'chefbranch'))
+$redis.hdel('config', 'chefbranch')
+$redis.hdel('config', 'chefrepo')
+
 $redis.save

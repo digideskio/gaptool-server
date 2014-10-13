@@ -113,7 +113,7 @@ module Gaptool
 
       %w(chef_repo chef_branch).each do |v|
         if rs[v].nil? || rs[v].empty?
-          rs[v] = get_config(v.gsub(/_/, ''))
+          rs[v] = get_config(v)
         end
       end
 

@@ -5,8 +5,8 @@ describe "data helpers" do
 
   before(:each) do
     $redis.flushall
-    DH.set_config('chefrepo', 'myrepo')
-    DH.set_config('chefbranch', 'master')
+    DH.set_config('chef_repo', 'myrepo')
+    DH.set_config('chef_branch', 'master')
   end
 
   def data
