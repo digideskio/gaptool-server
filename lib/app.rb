@@ -49,8 +49,9 @@ class GaptoolServer < Sinatra::Application
 
   before do
     if request.path_info != '/ping' && ENV['GAPTOOL_DISABLE_AUTH'].nil?
-      raise Unauthenticated unless $redis.hget('users', env['HTTP_X_GAPTOOL_USER']) == env['HTTP_X_GAPTOOL_KEY']
-      raise Unauthenticated unless env['HTTP_X_GAPTOOL_USER'] && env['HTTP_X_GAPTOOL_KEY']
+      user = Gaptool::Data.user(env['HTTP_X_GAPTOOL_USER'])
+      raise Unauthenticated if user.nil?
+      raise Unauthenticated unless user[:key] == env['HTTP_X_GAPTOOL_KEY']
     end
   end
 end
