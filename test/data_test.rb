@@ -1,7 +1,7 @@
 require_relative 'test_helper'
 require 'json'
 
-describe "Data helper tests" do
+describe "data helpers" do
 
   before(:each) do
     $redis.flushall
@@ -97,7 +97,9 @@ describe "Data helper tests" do
     DH.save_role_data("role", chef_runlist: ["recipe[myrecipe]"].to_json)
     DH.addserver(instid, data, nil)
     role = DH.get_role_data("role")
-    expect(role).to eq('chef_runlist' => ["recipe[myrecipe]"].to_json)
+    expect(role).to eq({"chef_runlist"=> ["recipe[myrecipe]"].to_json,
+                        "apps" => [],
+                        "amis" => {}})
     server = DH.get_server_data(instid)
     expect(server).to eq(data.merge("instance" => instid,
                                     "chef_runlist" => ["recipe[myrecipe]"],
@@ -109,6 +111,8 @@ describe "Data helper tests" do
     DH.save_role_data("role", ami: 'ami-1234567')
     DH.addserver(instid, data, nil)
     role = DH.get_role_data("role")
-    expect(role).to eq('ami' => 'ami-1234567')
+    expect(role).to eq({'ami' => 'ami-1234567',
+                        "apps" => [],
+                        "amis" => {}})
   end
 end

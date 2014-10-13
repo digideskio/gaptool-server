@@ -153,6 +153,7 @@ module Gaptool
       res = $redis.hgetall("role:#{role}")
       res['apps'] = apps_in_role(role)
       res['amis'] = $redis.hgetall("role:#{role}:amis")
+      res
     end
 
     def self.get_ami_for_role(role, region=nil)
@@ -193,7 +194,7 @@ module Gaptool
     end
 
     def self.roles
-      Hash[$redis.smembers("roles").map {|r| [r, apps_in_role(r)] }]
+      Hash[$redis.smembers("roles").map {|r| [r, get_role_data(r)] }]
     end
 
     def self.add_app(name, role)
