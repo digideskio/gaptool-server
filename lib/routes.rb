@@ -30,7 +30,7 @@ class GaptoolServer < Sinatra::Application
     security_group = data['security_group'] || Gaptool::Data::get_role_data(data['role'])["security_group"]
     sgid = Gaptool::EC2::get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
     image_id = data['ami'] || Gaptool::Data::get_ami_for_role(data['role'], data['zone'].chop)
-    data['terminate'] = data['terminate'].nil? ? true : !!data['terminate']
+    data['terminable'] = data['terminable'].nil? ? true : !!data['terminable']
 
     id = Gaptool::EC2::create_ec2_instance(
     {
@@ -53,7 +53,7 @@ class GaptoolServer < Sinatra::Application
           role: data['role'],
           environment: data['environment'],
           secret: secret,
-          terminate: data['terminate'],
+          terminable: data['terminable'],
           security_group: sgid})
   end
 
@@ -62,7 +62,7 @@ class GaptoolServer < Sinatra::Application
                               JSON.parse(request.body.read))
     host_data = Gaptool::Data::get_server_data data['id']
     raise NotFound, "No such instance: #{data['id']}" if host_data.nil?
-    raise Conflict, "Instance #{data['id']} cannot be terminated" if host_data['terminate'] == false
+    raise Conflict, "Instance #{data['id']} cannot be terminated" if host_data['terminable'] == false
 
     Gaptool::EC2::terminate_ec2_instance(data['zone'], data['id'])
     Gaptool::Data::rmserver(data['id'])

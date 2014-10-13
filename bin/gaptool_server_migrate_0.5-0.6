@@ -74,6 +74,13 @@ $redis.smembers('instances').each do |inst|
   if $redis.hget("instance:#{inst}", 'chef_runlist') == "recipe[init]"
     $redis.hdel "instance:#{inst}", "chef_runlist"
   end
+  term = $redis.hget("instance:#{inst}", "terminate")
+  unless term.nil?
+    unless term == 'true'
+      $redis.hset("instance:#{inst}", "terminable", term)
+    end
+    $redis.hdel("instance:#{inst}", "terminate")
+  end
 end
 
 puts "Removing old config keys"

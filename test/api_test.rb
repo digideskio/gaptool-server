@@ -42,7 +42,7 @@ describe "Test API" do
       'environment' => 'testenv',
       'ami' => 'ami-1234567',
       'chef_runlist' => ['recipe[myrecipe]'],
-      'terminate' => true,
+      'terminable' => true,
       'zone' => 'my-zone-1a',
       'itype' => 'm1.type'
     }
@@ -61,7 +61,7 @@ describe "Test API" do
     post '/init', host_data.to_json
     expect(last_response.status).to eq(200)
     expect(last_response.content_type).to eq('application/json')
-    expect(JSON.parse(last_response.body).keys).to eq(["instance", "ami", "role", "environment", "secret", "terminate", "security_group"])
+    expect(JSON.parse(last_response.body).keys).to eq(["instance", "ami", "role", "environment", "secret", "terminable", "security_group"])
   end
 
   it "should get the runlist from the role" do
@@ -132,7 +132,7 @@ describe "Test API" do
   end
 
   it "should fail to terminate non-terminable instance" do
-    post '/init', host_data.merge('terminate' => false).to_json
+    post '/init', host_data.merge('terminable' => false).to_json
     expect(last_response.status).to eq(200)
     id = JSON.parse(last_response.body)['instance']
     post '/terminate', {'id' => id}.to_json
@@ -168,7 +168,7 @@ describe "Test API" do
     id = add_and_register_server()['instance']
     get '/hosts'
     expect(last_response.status).to eq(200)
-    exp_data = host_data.reject{|k,v| k == 'terminate'}.merge('chef_runlist' => expanded_runlist)
+    exp_data = host_data.reject{|k,v| k == 'terminable'}.merge('chef_runlist' => expanded_runlist)
     exp_data['instance'] = id
     expect(JSON.parse(last_response.body)).to eq([exp_data])
   end
@@ -179,9 +179,9 @@ describe "Test API" do
     get '/hosts'
     expect(last_response.status).to eq(200)
     exp_data = [
-      host_data.reject{|k,v| k == 'terminate'}.merge({'instance' => id1,
+      host_data.reject{|k,v| k == 'terminable'}.merge({'instance' => id1,
                                                       'chef_runlist' => expanded_runlist}),
-      host_data.reject{|k,v| k == 'terminate'}.merge({'instance' => id2,
+      host_data.reject{|k,v| k == 'terminable'}.merge({'instance' => id2,
                                                       'chef_runlist' => expanded_runlist})
     ].to_set
     expect(JSON.parse(last_response.body).to_set).to eq(exp_data)
@@ -194,7 +194,7 @@ describe "Test API" do
 
     get '/hosts/otherrole'
     expect(last_response.status).to eq(200)
-    exp_data = [other.reject{|k,v| k == 'terminate'}.merge({'instance'=> id1,
+    exp_data = [other.reject{|k,v| k == 'terminable'}.merge({'instance'=> id1,
                                                     'chef_runlist' => expanded_runlist})]
     expect(JSON.parse(last_response.body)).to eq(exp_data)
   end
@@ -204,7 +204,7 @@ describe "Test API" do
     ["/instance/#{id}", "/host/testrole/testenv/#{id}", "/host/FAKE/FAKE/#{id}"].each do |url|
       get url
       expect(last_response.status).to eq(200)
-      exp_data = host_data.reject{|k,v| k == 'terminate'}.merge({
+      exp_data = host_data.reject{|k,v| k == 'terminable'}.merge({
         'instance'=> id,
         'chef_runlist' => expanded_runlist})
       expect(JSON.parse(last_response.body)).to eq(exp_data)
@@ -218,7 +218,7 @@ describe "Test API" do
     id4 = add_and_register_server(host_data.merge({'role' => 'otherrole'}))['instance']
     get '/hosts/testrole/testenv'
     expect(last_response.status).to eq(200)
-    d = host_data.reject{|k,v| k == 'terminate'}.merge('chef_runlist' => expanded_runlist)
+    d = host_data.reject{|k,v| k == 'terminable'}.merge('chef_runlist' => expanded_runlist)
     exp_data = [
       d.merge({'instance' => id1}),
       d.merge({'instance' => id2})

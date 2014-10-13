@@ -121,10 +121,10 @@ module Gaptool
         rs['initkey'] = get_config('initkey')
       end
 
-      if !rs['terminate'].nil? && rs['terminate'] == "false"
-        rs['terminate'] = false
+      if !rs['terminable'].nil? && rs['terminable'] == "false"
+        rs['terminable'] = false
       else
-        rs.delete('terminate')
+        rs.delete('terminable')
       end
 
       if opts[:force_runlist] && rs['chef_runlist'].nil?
