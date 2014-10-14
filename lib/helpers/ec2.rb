@@ -6,8 +6,8 @@ module Gaptool
 
     def self.configure_ec2 zone
       return if ENV['DRYRUN']
-      id = ENV['AWS_ACCESS_KEY_ID'] || $redis.hget('config', 'aws_id')
-      secret = ENV['AWS_SECRET_ACCESS_KEY'] || $redis.hget('config', 'aws_secret')
+      id = ENV['AWS_ACCESS_KEY_ID']
+      secret = ENV['AWS_SECRET_ACCESS_KEY']
       AWS.config(access_key_id: id, secret_access_key: secret,
                  ec2_endpoint: "ec2.#{zone}.amazonaws.com")
     end
