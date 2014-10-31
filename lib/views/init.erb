@@ -8,5 +8,5 @@ chmod 600 /root/.ssh/id_rsa
 echo 'StrictHostKeyChecking no' > /root/.ssh/config
 git clone -b <%= chef_branch %> <%= chef_repo %> /root/ops
 echo '<%= json %>' > /root/init.json
-chef-solo -c /root/ops/cookbooks/init.rb -j /root/init.json && \
+chef-solo -c /root/ops/cookbooks/init.rb -j /root/init.json -E <%= chef_environment %> && \
     (rm /root/.ssh/id_rsa; userdel -r ubuntu; rm -rf /root/.ssh; rm -rf /root/ops)
