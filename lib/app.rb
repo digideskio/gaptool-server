@@ -54,6 +54,13 @@ class GaptoolServer < Sinatra::Application
       raise Unauthenticated unless user[:key] == env['HTTP_X_GAPTOOL_KEY']
     end
   end
+
+  after do
+    # Fix for old versions of gaptool-api
+    unless request.accept.include? "application/json"
+      content_type 'text/plain'
+    end
+  end
 end
 
 require_relative 'helpers/init'
