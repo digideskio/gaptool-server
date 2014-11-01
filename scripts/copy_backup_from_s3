@@ -15,9 +15,10 @@ which lzop >/dev/null
 set -e
 
 get_from_s3() {
+    chmod 777 $dir
     pushd $dir &>/dev/null
     echo "Downloading $1"
-    s3cmd get $1 ._s3file
+    s3cmd get --force $1 ._s3file
     if [[ $1 == *.lzo ]]; then
         echo "Unpacking $1 to $dest"
         lzop -d -f ._s3file -o $dest
@@ -27,7 +28,6 @@ get_from_s3() {
     fi
     echo "Fixing permissions"
     chmod 666 $dest
-    chmod 777 $dir
 }
 
 docker_config() {
