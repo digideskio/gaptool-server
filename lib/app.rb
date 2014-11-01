@@ -57,8 +57,10 @@ class GaptoolServer < Sinatra::Application
 
   after do
     # Fix for old versions of gaptool-api
-    unless request.accept.include? "application/json"
-      content_type 'text/plain'
+    if request.preferred_type.to_str == "application/json"
+      content_type "application/json"
+    else
+      content_type 'text/html'
     end
   end
 end

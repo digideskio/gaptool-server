@@ -55,12 +55,17 @@ describe "Test API" do
   it "should return 200" do
     get '/'
     expect(last_response.status).to eq(200)
+    expect(last_response.content_type).to include('text/html')
+
+    header 'Accept', 'application/json'
+    get '/'
+    expect(last_response.status).to eq(200)
+    expect(last_response.content_type).to include('application/json')
   end
 
   it "should create a instance" do
     post '/init', host_data.to_json
     expect(last_response.status).to eq(200)
-    expect(last_response.content_type).to include('text/plain')
     expect(JSON.parse(last_response.body).keys).to eq(["instance", "ami", "role", "environment", "secret", "terminable", "security_group"])
   end
 
