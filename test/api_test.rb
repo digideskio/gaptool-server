@@ -162,6 +162,7 @@ describe "Test API" do
 
   it "should register the server" do
     add_and_register_server
+    expect(last_response.body).to include("-E #{host_data['environment']}")
   end
 
   it "should find an host" do
