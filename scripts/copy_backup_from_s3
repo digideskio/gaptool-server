@@ -15,7 +15,7 @@ which lzop >/dev/null
 set -e
 
 get_from_s3() {
-    chmod 777 $dir
+    chmod 777 $dir || true
     pushd $dir &>/dev/null
     echo "Downloading $1"
     s3cmd get --force $1 ._s3file
@@ -27,7 +27,7 @@ get_from_s3() {
         mv ._s3file $dest
     fi
     echo "Fixing permissions"
-    chmod 666 $dest
+    chmod 666 $dest || true
 }
 
 docker_config() {
