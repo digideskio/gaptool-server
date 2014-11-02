@@ -46,10 +46,10 @@ module Gaptool
 
     def self.create_ec2_instance(ec2opts, data)
       return "i-test#{SecureRandom.hex(2)}" if ENV['DRYRUN']
-      configure_ec2 data['zone'].chop
+      configure_ec2 data[:zone].chop
       ec2 = AWS::EC2.new
 
-      instance = ec2.instances.create(opts)
+      instance = ec2.instances.create(ec2opts)
       instance.add_tag('Name', value: "#{data[:role]}-#{data[:env]}-#{instance.id}")
       instance.add_tag('gaptool', :value => "yes")
       instance.id
