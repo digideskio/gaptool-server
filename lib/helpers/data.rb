@@ -101,6 +101,14 @@ module Gaptool
       $redis.hset('config', key, value)
     end
 
+    def self.del_config(key)
+      $redis.hdel('config', key)
+    end
+
+    def self.get_all_configs
+      $redis.hgetall('config')
+    end
+
     def self.get_server_data(instance, opts={})
       rs = $redis.hgetall("instance:#{instance}")
       return nil if rs.nil? || rs.empty?
