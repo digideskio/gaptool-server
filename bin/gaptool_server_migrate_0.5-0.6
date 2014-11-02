@@ -62,6 +62,9 @@ $redis.keys('host:*').each do |key|
   data = $redis.hgetall(key)
   data['role'] = role
   data['environment'] = env
+  unless data['chef_runlist'].nil?
+    data['chef_runlist'] = JSON.parse data['chef_runlist']
+  end
   DH.addserver(iid, data, nil)
   $redis.del(key)
   # remove stale keys from hsh
