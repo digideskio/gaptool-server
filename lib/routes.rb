@@ -31,6 +31,7 @@ class GaptoolServer < Sinatra::Application
     sgid = Gaptool::EC2::get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
     image_id = data['ami'] || Gaptool::Data::get_ami_for_role(data['role'], data['zone'].chop)
     data['terminable'] = data['terminable'].nil? ? true : !!data['terminable']
+    data['secret'] = secret
 
     id = Gaptool::EC2::create_ec2_instance(
     {
@@ -39,7 +40,7 @@ class GaptoolServer < Sinatra::Application
       :instance_type => data['itype'],
       :key_name => "gaptool",
       :security_group_ids => sgid,
-      :user_data => "#!/bin/bash\ncurl --silent -H 'X-GAPTOOL-USER: #{env['HTTP_X_GAPTOOL_USER']}' -H 'X-GAPTOOL-KEY: #{env['HTTP_X_GAPTOOL_KEY']}' #{$redis.hget('config', 'url')}/register -X PUT --data '#{data.to_json}' | bash"
+      :user_data => "#!/bin/bash\ncurl --silent -H 'X-GAPTOOL-USER: #{env['HTTP_X_GAPTOOL_USER']}' -H 'X-GAPTOOL-KEY: #{env['HTTP_X_GAPTOOL_KEY']}' #{Gaptool::Data.get_config('url')}/register -X PUT --data '#{data.to_json}' | bash"
      }, {
        role: data['role'],
        env: data['environment'],
