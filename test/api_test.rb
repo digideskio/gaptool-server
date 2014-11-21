@@ -44,7 +44,8 @@ describe "Test API" do
       'chef_runlist' => ['recipe[myrecipe]'],
       'terminable' => true,
       'zone' => 'my-zone-1a',
-      'itype' => 'm1.type'
+      'itype' => 'm1.type',
+      "hostname" => 'fake.hostname.gild.com'
     }
   end
 
