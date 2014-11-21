@@ -76,7 +76,7 @@ describe "Test API" do
     get "/host/testrole/testenv/#{id}"
     resp = JSON.parse(last_response.body)
     expect(resp.keys).to include("chef_runlist")
-    expect(resp['chef_runlist']).to eq(['recipe[init]', 'recipe[other]'])
+    expect(resp['chef_runlist']).to eq(['recipe[other]'])
   end
 
   it "should remove default runlist" do
