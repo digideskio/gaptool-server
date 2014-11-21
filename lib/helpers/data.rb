@@ -44,6 +44,11 @@ module Gaptool
       end
     end
 
+    def self.set_server_data_attr(instance, attr, value)
+      return if value.nil? || (value.is_a?(String) && value.empty?) || !!value == value
+      $redis.hset("instance:#{instance}", attr, value)
+    end
+
     def self.save_server_data(instance, data)
 
       unless data['chef_runlist'].nil?
