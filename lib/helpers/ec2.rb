@@ -73,7 +73,7 @@ module Gaptool
       ec2 = AWS::EC2.new
       instance = ec2.instances[id]
       return {
-        dns_name: instance.dns_name
+        hostname: instance.dns_name
       }
     end
   end

@@ -79,6 +79,8 @@ class GaptoolServer < Sinatra::Application
 
     hostname = Gaptool::EC2::get_ec2_instance_data(data['zone'].chop, instance_id)[:hostname]
     host_data = Gaptool::Data::get_server_data instance_id, initkey: true, force_runlist: true
+    host_data['hostname'] = hostname
+    Gaptool::Data.save_server_data(instance_id, host_data)
 
     chef_repo = host_data['chef_repo']
     chef_branch = host_data['chef_branch']
