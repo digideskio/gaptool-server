@@ -1,15 +1,13 @@
 module Gaptool
   module EC2
     def self.rehash()
-      servers.each do |inst|
-        rmserver inst
+      Gaptool::Data::servers.each do |inst|
+        Gaptool::Data::rmserver inst
       end
-      layout = roles()
-      puts layout
-      zones.each do |zone|
-        @ec2 = AWS::EC2.new(:access_key_id => $redis.hget('config', 'aws_id'),
-                            :secret_access_key => $redis.hget('config', 'aws_secret'),
-                            :ec2_endpoint => "ec2.#{zone}.amazonaws.com")
+      roles = Gaptool::Data::roles
+      Gaptool::Data::zones.each do |zone|
+        Gaptool::EC2::configure_ec2 zone
+        @ec2 = AWS::EC2.new
         ilist = []
         @ec2.instances.each do |instance|
           if instance.tags['gaptool'] == 'yes' && instance.status == :running
@@ -18,18 +16,16 @@ module Gaptool
         end
         ilist.each do |instance|
           puts " - #{instance.tags['Name']}"
-          role, environment, iid = instance.tags['Name'].split('-')
+          role, environment, iid = instance.tags['Name'].split('-', 3)
           data = {
             "zone"=> instance.availability_zone,
-            "itype"=> instance.instance_type,
             "role"=> role,
             "environment"=> environment,
             "hostname"=> instance.public_dns_name,
-            "apps" => layout[role].to_s,
+            "apps" => roles[role].to_s,
             "instance"=> instance.instance_id
           }
-          puts data
-          addserver(data['instance'], data, nil)
+          Gaptool::Data::addserver(iid, data, nil)
         end
       end
       return {"action" => "complete"}

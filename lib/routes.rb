@@ -170,7 +170,7 @@ class GaptoolServer < Sinatra::Application
   end
 
   post '/rehash' do
-    json Gaptool::Rehash::rehash()
+    json Gaptool::EC2::rehash()
   end
 
 end
