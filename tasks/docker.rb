@@ -43,6 +43,11 @@ unless File.exists?('/.dockerenv')
       sys(%w(fig run --rm gaptool rake test))
     end
 
+    desc "Rehash instances"
+    task :rehash => :build do
+      sys(%w(fig run --rm gaptool rake rehash))
+    end
+
     desc "Stop docker containers"
     task :stop do
       sys(%w(fig stop))

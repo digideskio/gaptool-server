@@ -5,6 +5,7 @@ require 'shellwords'
 require 'rspec/core/rake_task'
 require_relative 'lib/helpers/redis'
 require_relative 'lib/helpers/init'
+require_relative 'lib/helpers/rehash'
 
 DH = Gaptool::Data
 $stdout.sync = true
@@ -29,6 +30,12 @@ task :sh => :shell
 desc "Start the HTTP server"
 task :server do
   exec "unicorn #{Shellwords.join(ARGV[1..-1])}"
+end
+
+desc "Rehash hosts"
+task :rehash do
+  puts "Running rehash"
+  Gaptool::EC2::rehash
 end
 
 task :help do
