@@ -171,6 +171,15 @@ describe "Test API" do
     expect(last_response.body).to include("-E #{host_data['environment']}")
   end
 
+  it "should not find any hosts" do
+    post '/init', host_data.to_json
+    expect(last_response.status).to eq(200)
+
+    get '/hosts'
+    expect(last_response.status).to eq(200)
+    expect(JSON.parse(last_response.body)).to eq([])
+  end
+
   it "should find an host" do
     id = add_and_register_server()['instance']
     get '/hosts'
@@ -197,7 +206,7 @@ describe "Test API" do
   it "should find an host by role" do
     other = host_data.merge({'role' => 'otherrole'})
     id1 = add_and_register_server(other)['instance']
-    id2 = add_and_register_server()['instance']
+    add_and_register_server()['instance']
 
     get '/hosts/otherrole'
     expect(last_response.status).to eq(200)
@@ -221,7 +230,7 @@ describe "Test API" do
   it "should find all hosts by environment and role" do
     id1 = add_and_register_server()['instance']
     id2 = add_and_register_server()['instance']
-    id3 = add_and_register_server(host_data.merge({'environment' => 'otherenv'}))['instance']
+    add_and_register_server(host_data.merge({'environment' => 'otherenv'}))['instance']
     id4 = add_and_register_server(host_data.merge({'role' => 'otherrole'}))['instance']
     get '/hosts/testrole/testenv'
     expect(last_response.status).to eq(200)
