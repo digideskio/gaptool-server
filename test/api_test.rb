@@ -178,6 +178,10 @@ describe "Test API" do
     get '/hosts'
     expect(last_response.status).to eq(200)
     expect(JSON.parse(last_response.body)).to eq([])
+
+    get "/hosts/#{host_data['role']}"
+    expect(last_response.status).to eq(200)
+    expect(JSON.parse(last_response.body)).to eq([])
   end
 
   it "should find an host" do

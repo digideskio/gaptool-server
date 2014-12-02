@@ -130,7 +130,7 @@ class GaptoolServer < Sinatra::Application
   get '/hosts/:role' do
     servers =  Gaptool::Data::servers_in_role(params[:role]).map do |inst|
       Gaptool::Data::get_server_data inst
-    end
+    end.select{ |s| !s['registered'] }
     json servers
   end
 
