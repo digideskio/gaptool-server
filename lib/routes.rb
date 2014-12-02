@@ -88,8 +88,8 @@ class GaptoolServer < Sinatra::Application
     chef_branch = host_data['chef_branch']
     chef_environment = host_data['environment']
     # FIXME: remove init key from redis
-    initkey = host_data['init_key']
-    run_list = host_data['chef_runlist'].to_json
+    initkey = Gaptool::Data::get_config("initkey")
+    run_list = host_data['chef_runlist']
 
     jdata = {
       'hostname' => hostname,
