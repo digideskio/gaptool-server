@@ -138,7 +138,7 @@ class GaptoolServer < Sinatra::Application
   end
 
   get '/instance/:id' do
-    json Gaptool::Data::get_server_data(params[:id])
+    json Gaptool::Data::stringify_apps(Gaptool::Data::get_server_data(params[:id]))
   end
 
   get '/hosts/:role/:environment' do
@@ -148,14 +148,14 @@ class GaptoolServer < Sinatra::Application
       list = Gaptool::Data::servers_in_role_env params[:role], params[:environment]
     end
     servers = list.map do |inst|
-      Gaptool::Data::get_server_data inst
+      Gaptool::Data::stringify_apps(Gaptool::Data::get_server_data(inst))
     end
 
     json servers
   end
 
   get '/host/:role/:environment/:instance' do
-    json Gaptool::Data::get_server_data params[:instance]
+    json Gaptool::Data::stringify_apps(Gaptool::Data::get_server_data(params[:instance]))
   end
 
   get '/ssh/:role/:environment/:instance' do

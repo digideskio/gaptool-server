@@ -248,6 +248,13 @@ module Gaptool
       $redis.smembers("role:#{role}:apps")
     end
 
+    def self.stringify_apps(rs)
+      unless rs['apps'].nil?
+        rs['apps'] = rs['apps'].to_json
+      end
+      rs
+    end
+
     def self.useradd(user, key=nil)
       key = SecureRandom.hex(64) unless key
       $redis.hset('users', user, key)
