@@ -58,10 +58,12 @@ module Gaptool
       instance = ec2.instances.create(ec2opts)
       instance.add_tag('Name', value: "#{data[:role]}-#{data[:env]}-#{instance.id}")
       instance.add_tag('gaptool', :value => "yes")
+      launch_time = instance.launch_time.to_s
+      launch_time = launch_time.empty? ? Time.now.to_s : launch_time
       {
         id: instance.id,
         hostname: instance.public_dns_name,
-        launch_time: instance.launch_time.to_s,
+        launch_time: launch_time
       }
     end
 
