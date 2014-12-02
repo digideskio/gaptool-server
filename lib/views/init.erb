@@ -1,6 +1,8 @@
 apt-get update
 apt-get install -ymq zsh git libssl-dev ruby1.9.1-full build-essential
-gem install --bindir /usr/local/bin --no-ri --no-rdoc chef
+curl -LO https://www.getchef.com/chef/install.sh
+bash install.sh
+
 cat << 'EOFKEY' > /root/.ssh/id_rsa
 <%= @initkey %>
 EOFKEY
@@ -9,4 +11,4 @@ echo 'StrictHostKeyChecking no' > /root/.ssh/config
 git clone -b <%= @chef_branch %> <%= @chef_repo %> /root/ops
 echo '<%= @json %>' > /root/init.json
 chef-solo -c /root/ops/cookbooks/init.rb -j /root/init.json -E <%= @chef_environment %> && \
-    (rm /root/.ssh/id_rsa; userdel -r ubuntu; rm -rf /root/.ssh; rm -rf /root/ops)
+    (rm /root/.ssh/id_rsa; rm /root/install.sh; userdel -r ubuntu; rm -rf /root/.ssh; rm -rf /root/ops)
