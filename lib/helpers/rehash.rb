@@ -1,3 +1,6 @@
+require_relative "ec2"
+require_relative "data"
+
 module Gaptool
   module EC2
     def self.rehash()
@@ -21,7 +24,8 @@ module Gaptool
             "zone"=> instance.availability_zone,
             "role"=> role,
             "environment"=> environment,
-            "hostname"=> instance.public_dns_name,
+            "hostname" => instance.public_dns_name,
+            "launch_time" => instance.launch_time.to_s,
             "apps" => roles[role].to_s,
             "instance"=> instance.instance_id
           }

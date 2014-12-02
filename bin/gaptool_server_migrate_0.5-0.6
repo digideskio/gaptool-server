@@ -7,6 +7,7 @@ libpath = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
 $:.unshift(libpath)
 require "#{libpath}/helpers/redis"
 require "#{libpath}/helpers/data"
+require "#{libpath}/helpers/rehash"
 DH = Gaptool::Data
 
 puts "Removing cruft"
@@ -96,4 +97,6 @@ puts "Removing old config keys"
   $redis.hdel 'config', key
 end
 
+puts "Running reshah"
+Gaptool::EC2::rehash
 $redis.save
