@@ -33,7 +33,7 @@ class GaptoolServer < Sinatra::Application
     data['terminable'] = data['terminable'].nil? ? true : !!data['terminable']
     data['secret'] = secret
 
-    id = Gaptool::EC2::create_ec2_instance(
+    instance = Gaptool::EC2::create_ec2_instance(
     {
       :image_id => image_id,
       :availability_zone => data['zone'],
@@ -48,10 +48,13 @@ class GaptoolServer < Sinatra::Application
      }
     )
     # Add host tag
-    Gaptool::Data::addserver(id, data, secret)
-    json({instance: id,
+    data.merge(instance.reject { |k, v| k == :id })
+    Gaptool::Data::addserver(instance[:id], data, secret)
+    json({instance: instance[:id],
           ami: image_id,
           role: data['role'],
+          hostname: instance[:hostname],
+          launch_time: instance[:launch_time],
           environment: data['environment'],
           secret: secret,
           terminable: data['terminable'],

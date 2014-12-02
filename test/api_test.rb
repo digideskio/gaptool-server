@@ -67,7 +67,7 @@ describe "Test API" do
   it "should create a instance" do
     post '/init', host_data.to_json
     expect(last_response.status).to eq(200)
-    expect(JSON.parse(last_response.body).keys).to eq(["instance", "ami", "role", "environment", "secret", "terminable", "security_group"])
+    expect(JSON.parse(last_response.body).keys).to eq(["instance", "ami", "role", "hostname", "launch_time", "environment", "secret", "terminable", "security_group"])
   end
 
   it "should get the runlist from the role" do

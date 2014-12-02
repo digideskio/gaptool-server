@@ -1,3 +1,4 @@
+require 'aws-sdk'
 require 'securerandom'
 
 # encoding: utf-8
@@ -45,14 +46,23 @@ module Gaptool
     end
 
     def self.create_ec2_instance(ec2opts, data)
-      return "i-test#{SecureRandom.hex(2)}" if ENV['DRYRUN']
+      if ENV['DRYRUN']
+        id = "i-test#{SecureRandom.hex(2)}"
+        return {id: id,
+                hostname: "test-#{id}.#{data[:zone].chop}.compute.amazonaws.com",
+                launch_time: Time.now.to_s}
+      end
       configure_ec2 data[:zone].chop
       ec2 = AWS::EC2.new
 
       instance = ec2.instances.create(ec2opts)
       instance.add_tag('Name', value: "#{data[:role]}-#{data[:env]}-#{instance.id}")
       instance.add_tag('gaptool', :value => "yes")
-      instance.id
+      {
+        id: instance.id,
+        hostname: instance.public_dns_name,
+        launch_time: instance.launch_time.to_s,
+      }
     end
 
     def self.terminate_ec2_instance(zone, id)
