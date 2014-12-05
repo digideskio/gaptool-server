@@ -125,6 +125,7 @@ class GaptoolServer < Sinatra::Application
     @chef_branch = host_data['chef_branch'] && !host_data['chef_branch'].empty? ? host_data['chef_branch'] : $redis.hget('config', 'chefbranch')
     @chef_environment = data['environment']
     @initkey = $redis.hget('config', 'initkey')
+    @chef_version = $redis.hget("config", "chef_version") || "11.16.4"
     @json = {
       'hostname' => hostname,
       'recipe' => 'init',
