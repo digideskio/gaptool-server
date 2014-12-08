@@ -111,6 +111,7 @@ class GaptoolServer < Sinatra::Application
       chef_branch: chef_branch,
       chef_repo: chef_repo,
       chef_environment: chef_environment,
+      chef_version: Gaptool::Data::ensure_config("chef_version", "11.16.4"),
       json: jdata
     }
   end

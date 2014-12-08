@@ -3,9 +3,8 @@ set -e
 cd /root
 apt-get update
 apt-get install -ymq zsh git libssl-dev ruby1.9.1-full build-essential
-
 curl -LO https://www.getchef.com/chef/install.sh
-bash install.sh
+bash install.sh -v <%= chef_version %>
 cat << 'EOFKEY' > /root/.ssh/id_rsa
 <%= initkey %>
 EOFKEY

@@ -102,8 +102,15 @@ module Gaptool
       $redis.hget('config', key)
     end
 
+    def self.ensure_config(key, default)
+      cur = get_config(key)
+      cur = set_config(key, default) if cur.nil? || cur.empty?
+      cur
+    end
+
     def self.set_config(key, value)
       $redis.hset('config', key, value)
+      value
     end
 
     def self.del_config(key)
