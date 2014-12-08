@@ -11,8 +11,9 @@ COPY gaptool-server.gemspec /opt/gaptool/gaptool-server.gemspec
 COPY VERSION /opt/gaptool/VERSION
 RUN cd /opt/gaptool && bundle install --system
 
+ADD . /opt/gaptool
+RUN chown -R gaptool:gaptool /opt/gaptool
 USER gaptool
 EXPOSE 3000
 
-ADD . /opt/gaptool
 CMD ["/opt/gaptool/bin/gaptool-server", "--listen=0.0.0.0:3000"]
