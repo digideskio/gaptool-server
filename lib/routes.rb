@@ -126,7 +126,7 @@ class GaptoolServer < Sinatra::Application
   get '/apps' do
     out = {}
     Gaptool::Data.apps.each do |app|
-      out[app] = Gaptool::Data::get_app_data(app)
+      out["app:#{app}"] = Gaptool::Data::get_app_data(app)
     end
     json out
   end
