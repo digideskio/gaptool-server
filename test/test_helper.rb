@@ -11,6 +11,7 @@ libpath = File.realpath(File.join(File.dirname(__FILE__), "..", "lib"))
 require 'rspec'
 require 'rack/test'
 require 'fakeredis/rspec'
+require 'redis-namespace'
 require "#{libpath}/app.rb"
 
 RSpec.configure do |conf|
@@ -22,4 +23,5 @@ end
 
 DH = Gaptool::Data
 
-$redis = Redis.new
+conn = Redis.new
+$redis = Redis::Namespace.new(:gt, redis:conn)

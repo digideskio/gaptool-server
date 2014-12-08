@@ -9,6 +9,11 @@ describe "data helpers" do
     DH.set_config('chef_branch', 'master')
   end
 
+  after(:all) do
+    keys = $redis.redis.keys('*').select{|k| !k.start_with?('gt:')}
+    expect(keys).to eq([])
+  end
+
   def data
     {
       'role' => "role",

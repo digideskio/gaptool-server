@@ -1,5 +1,6 @@
 #!/bin/bash
 
+GT_URL=$2
 set -u
 set -e
 dir=$(dirname $0)/../redis_data/
@@ -47,11 +48,11 @@ stop_containers() {
 
 start_containers() {
     rake docker:up
-    echo "Migrating data: rake docker:run ./bin/gaptool_server_migrate_0.5-0.6"
-    rake docker:run ./bin/gaptool_server_migrate_0.5-0.6
+    echo "Migrating data: rake docker:run ./bin/gaptool_server_migrate_0.5-0.6 $GT_URL"
+    rake docker:run ./bin/gaptool_server_migrate_0.5-0.6 $GT_URL
 }
 
-if [ $# -eq 1 ]; then
+if [ $# -ge 1 ]; then
     docker_config
     stop_containers
     if [[ $1 == s3://* ]]; then
@@ -77,12 +78,13 @@ if [ $# -eq 1 ]; then
     fi
     start_containers
 else
-    echo "usage: $(basename $0) <backup_location>"
+    echo "usage: $(basename $0) <backup_location> [GT_URL]"
     echo ""
     echo "<backup_location>"
     echo -e "\t * s3://<bucket>/<prefix>* : Download last backup from s3 bucket"
     echo -e "\t * s3://<bucket>/<prefix>/<file> : Download a specific file from s3"
     echo -e "\t * <path> : Copy a file from a local path"
+    echo "GT_URL: if set, set the new URL in gaptool configuration"
     echo ""
     echo ".lzo files will be automatically uncompressed"
 fi
