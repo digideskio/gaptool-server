@@ -12,7 +12,7 @@ gaptool:
     entrypoint: /opt/gaptool/scripts/fig_entry.rb
     command: /opt/gaptool/bin/gaptool-server --listen 0.0.0.0:3000
 redis:
-    image: redis:2.8.13
+    image: redis:2.8.17
     ports:
       - '6379'
     volumes:
