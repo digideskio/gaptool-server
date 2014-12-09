@@ -36,9 +36,9 @@ class GaptoolServer < Sinatra::Application
   end
 
   configure do
-    unless ENV['GAPTOOL_AIRBRAKE_KEY'].nil?
+    unless ENV['AIRBRAKE_API_KEY'].nil?
       Airbrake.configure do |cfg|
-        cfg.api_key = ENV['GAPTOOL_AIRBRAKE_KEY']
+        cfg.api_key = ENV['AIRBRAKE_API_KEY']
       end
       use Airbrake::Sinatra
     end
