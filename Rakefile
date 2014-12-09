@@ -32,6 +32,11 @@ unless File.exists?('/.dockerenv')
   task :server do
     exec "unicorn #{Shellwords.join(ARGV[1..-1])}"
   end
+
+  desc "Tag git with VERSION"
+  task :tag do
+    exec "git tag v$(cat VERSION)"
+  end
 end
 
 task :help do
