@@ -8,7 +8,10 @@ unless File.exists?('/.dockerenv')
 
     desc "Clean built file"
     task :clean do
-      sys(%w(rm -vf *.gem))
+      Dir.glob("*.gem") do |f|
+        puts " * #{f}"
+        File.unlink(f)
+      end
     end
 
     desc "Bump the version"
@@ -23,7 +26,8 @@ unless File.exists?('/.dockerenv')
 
     desc "Push"
     task :push => :build do
-      sys(%w(gem push gaptool-server*.gem))
+      version = File.read('VERSION').strip
+      sys(%W(gem push gaptool-server-#{version}.gem))
     end
   end
 end
