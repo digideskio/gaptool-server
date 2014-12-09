@@ -21,21 +21,17 @@ end
 
 Dir.glob('tasks/*.rb').each { |r| load r}
 
-desc "Start the shell"
-task :shell do
-  exec "racksh #{Shellwords.join(ARGV[1..-1])}"
-end
-task :sh => :shell
+unless File.exists?('/.dockerenv')
+  desc "Start the shell"
+  task :shell do
+    exec "racksh #{Shellwords.join(ARGV[1..-1])}"
+  end
+  task :sh => :shell
 
-desc "Start the HTTP server"
-task :server do
-  exec "unicorn #{Shellwords.join(ARGV[1..-1])}"
-end
-
-desc "Rehash hosts"
-task :rehash do
-  puts "Running rehash"
-  Gaptool::EC2::rehash
+  desc "Start the HTTP server"
+  task :server do
+    exec "unicorn #{Shellwords.join(ARGV[1..-1])}"
+  end
 end
 
 task :help do
