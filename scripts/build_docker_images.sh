@@ -28,7 +28,7 @@ done
 
 # get tag from git: if not tag on last commit (vX.Y.Z), default to
 # current branch name if no tag.
-tag=$(git log -n1 --pretty=format:%h%d | grep -o -E 'v[0-9]+\.[0-9]+\.[0-9]\.+(rc|a|b)?[0-9]+' || git rev-parse --abbrev-ref HEAD)
+tag=$(git log -n1 --pretty=format:%h%d | grep -o -E 'v[0-9]+\.[0-9]+\.[0-9]' || git rev-parse --abbrev-ref HEAD)
 build_cmd="docker build --rm -t gild/gaptool:$tag ."
 echo "Building docker image: $build_cmd"
 $build_cmd
