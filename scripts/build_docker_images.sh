@@ -33,8 +33,6 @@ build_cmd="docker build --rm -t gild/gaptool:$tag ."
 echo "Building docker image: $build_cmd"
 $build_cmd
 
-additional_tags+=('latest')
-
 for (( i=0; i<${#additional_tags[@]}; i++ )) do
     t=${additional_tags[$i]}
     echo "Setting tag $t"
