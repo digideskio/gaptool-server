@@ -77,11 +77,6 @@ unless File.exists?('/.dockerenv')
     task :run do
       exit sys(%W(fig run --rm gaptool #{ARGV[1..-1].shelljoin}))
     end
-
-    desc "Run a rake task inside the docker container"
-    task :rake do
-      exit sys(%W(fig run --rm gaptool rake #{ARGV[1..-1].shelljoin}))
-    end
   end
 
   desc "Bring up docker containers"
