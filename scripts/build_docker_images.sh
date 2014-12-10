@@ -9,7 +9,7 @@ fi
 set -e
 set -u
 
-declare -a additional_tags
+additional_tags=()
 run_tests=false
 push=false
 
