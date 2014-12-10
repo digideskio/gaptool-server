@@ -235,7 +235,7 @@ module Gaptool
           $redis.multi do |m|
             m.del(key)
             m.srem("apps", name)
-            m.srem("role:#{role}")
+            m.srem("role:#{role}:apps", name)
           end
         else
           $redis.unwatch
