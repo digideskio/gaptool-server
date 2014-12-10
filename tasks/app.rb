@@ -12,9 +12,22 @@ namespace :app do
   end
 
   desc "Remove an application"
-  task :delete, [:app] do |t, args|
-    DH.remove_app(args[:app])
-    puts "Removed app #{args[:app]}"
+  task :del, [:app] do |t, args|
+    unless args[:app].nil? || args[:app].empty?
+      DH.remove_app(args[:app])
+      puts "Removed app #{args[:app]}"
+    end
+  end
+
+  desc "Print app info"
+  task :info, [:app] do |t, args|
+    info = DH.get_app_data(args[:app])
+    if info.nil? || info.empty?
+      puts "No such app #{args[:app]}"
+    else
+      puts " * #{args[:app]} => #{info["role"]}"
+    end
+
   end
 end
 
