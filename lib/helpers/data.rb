@@ -244,7 +244,8 @@ module Gaptool
     end
 
     def self.get_app_data(app)
-      {"role" => $redis.get("app:#{app}")}
+      role = $redis.get("app:#{app}")
+      return {"role" => role } unless role.nil?
     end
 
     def self.apps
