@@ -33,9 +33,28 @@ unless File.exists?('/.dockerenv')
     exec "unicorn -p 3000 #{Shellwords.join(ARGV[1..-1])}"
   end
 
+  desc "Bump the version"
+  task :bump do
+    version = File.read('VERSION').strip
+    nver = version.next
+    f = File.open('VERSION', 'w')
+    f.write(nver)
+    f.close
+    puts "Bumped #{version} => #{nver}"
+    exec "git commit -m 'Bump version to v#{nver}' VERSION"
+    Rake::Task["tag"].invoke
+    Rake::Task["gem:build"].invoke
+  end
+
   desc "Tag git with VERSION"
   task :tag do
     exec "git tag v$(cat VERSION)"
+  end
+
+  desc "Push the git tag and the gem version"
+  task :push => :tag do
+    exec "git push origin v$(cat VERSION)"
+    Rake::Task["gem:push"].invoke
   end
 end
 
