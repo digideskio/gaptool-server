@@ -22,6 +22,9 @@ unless File.exists?('/.dockerenv')
       f.write(nver)
       f.close
       puts "Bumped #{version} => #{nver}"
+      exec "git commit -m 'Bump version to v#{nver}' VERSION"
+      Rake::Task["tag"].invoke
+      Rake::Task["gem:build"].invoke
     end
 
     desc "Push"
