@@ -36,7 +36,8 @@ describe "data helpers" do
       'chef_repo' => 'myrepo',
       'chef_branch' => 'master',
       'registered' => 'false',
-      'secret' => 'secret'
+      'secret' => 'secret',
+      'apps' => []
     }))
   end
 
@@ -46,7 +47,8 @@ describe "data helpers" do
     expect(server).to eq(data.merge({
       'instance' => instid,
       'chef_repo' => 'myrepo',
-      'chef_branch' => 'master'
+      'chef_branch' => 'master',
+      'apps' => []
     }))
   end
 
@@ -61,7 +63,8 @@ describe "data helpers" do
     expect(server).to eq(data.merge({
       'instance' => instid,
       'chef_repo' => 'myrepo',
-      'chef_branch' => 'master'
+      'chef_branch' => 'master',
+      'apps' => []
     }))
   end
 
@@ -94,7 +97,8 @@ describe "data helpers" do
       'instance' => instid,
       'chef_repo' => 'myrepo',
       'chef_branch' => 'master',
-      'initkey' => 'FAKEKEY'
+      'initkey' => 'FAKEKEY',
+      'apps' => []
     }))
   end
 
@@ -109,7 +113,8 @@ describe "data helpers" do
     expect(server).to eq(data.merge("instance" => instid,
                                     "chef_runlist" => ["recipe[myrecipe]"],
                                     "chef_repo" => "myrepo",
-                                    "chef_branch" => "master" ))
+                                    "chef_branch" => "master",
+                                    "apps" => [] ))
   end
 
   it "shoud get the ami for a node from the role" do

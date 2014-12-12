@@ -151,8 +151,9 @@ module Gaptool
         rs['chef_runlist'] = default_runlist
       end
 
-      rs['apps'] = apps_in_role(rs['role'])
       rs.delete_if {|k,v| v.nil? || (!!v != v && v.empty?)}
+      rs['apps'] = apps_in_role(rs['role'])
+      rs
     end
 
     def self.save_role_data(role, data)
