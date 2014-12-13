@@ -15,6 +15,6 @@ namespace :server do
       puts "You must select an instance"
       return 1
     end
-    DH.rmserver(instance)
+    DH.rmserver(args[:instance])
   end
 end
