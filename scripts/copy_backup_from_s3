@@ -48,8 +48,6 @@ stop_containers() {
 
 start_containers() {
     rake docker:up
-    echo "Migrating data: rake docker:run ./bin/gaptool_server_migrate_0.5-0.6 $GT_URL"
-    rake docker:run ./bin/gaptool_server_migrate_0.5-0.6 $GT_URL
 }
 
 if [ $# -ge 1 ]; then
