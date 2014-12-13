@@ -8,4 +8,13 @@ namespace :server do
     DH.set_server_data_attr args[:instance], 'terminable', (args[:value] == "true" ? "true" : "false")
     puts DH.get_server_data args[:instance]
   end
+
+  desc "Remove a server from the gaptool database (no actions on AWS)"
+  task :rm, [:instance] do |t, args|
+    if args[:instance].nil?
+      puts "You must select an instance"
+      return 1
+    end
+    DH.rmserver(instance)
+  end
 end
