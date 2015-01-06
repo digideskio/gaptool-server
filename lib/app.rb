@@ -9,10 +9,12 @@ require 'openssl'
 require 'net/ssh'
 require 'peach'
 require 'airbrake'
+require 'logger'
 require_relative 'exceptions'
 
 class GaptoolServer < Sinatra::Application
   helpers Sinatra::JSON
+  use Airbrake::Sinatra
 
   def error_response msg=''
     message = "#{env['sinatra.error'].message}"
@@ -39,8 +41,8 @@ class GaptoolServer < Sinatra::Application
     unless ENV['AIRBRAKE_API_KEY'].nil?
       Airbrake.configure do |cfg|
         cfg.api_key = ENV['AIRBRAKE_API_KEY']
+        cfg.logger = Logger.new(STDOUT)
       end
-      use Airbrake::Sinatra
     end
     disable :sessions
     enable  :dump_errors
