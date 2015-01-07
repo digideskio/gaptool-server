@@ -6,7 +6,8 @@ if ENV['COVERAGE']
     add_group 'helpers', 'lib/helpers'
   end
 end
-
+# Clear airbrake env if set
+ENV['AIRBRAKE_API_KEY'] = nil
 libpath = File.realpath(File.join(File.dirname(__FILE__), "..", "lib"))
 require 'rspec'
 require 'rack/test'
