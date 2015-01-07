@@ -69,8 +69,13 @@ module Gaptool
         sleep sleeptime
         retry
       end
-      launch_time = instance.launch_time.to_s
-      launch_time = launch_time.empty? ? Time.now.to_s : launch_time
+
+      begin
+        launch_time = instance.launch_time.to_s
+        launch_time = launch_time.empty? ? Time.now.to_s : launch_time
+      rescue
+        launch_time = Time.now.to_s
+      end
       {
         id: instance.id,
         instance: instance,
