@@ -1,10 +1,11 @@
 gaptool:
     image: gild/gaptool:latest
     environment:
-        RACK_ENV: development
-        DRYRUN: 'true'
-        AWS_ACCESS_KEY_ID: fakeid
-        AWS_SECRET_ACCESS_KEY: fakesecret
+        RACK_ENV: production
+        # DRYRUN: 'true'
+        AWS_ACCESS_KEY_ID: AKIAJROI6RSCBQ25WJXA
+        AWS_SECRET_ACCESS_KEY: 1p28XkT13g6rxYbEcolI7vbZ/oWmVVJt1kHjc3X/
+        AIRBRAKE_API_KEY: a6b0542d5ca7b2fca701132663146fc1
     links:
       - redis
     ports:

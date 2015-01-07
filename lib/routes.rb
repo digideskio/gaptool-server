@@ -2,6 +2,7 @@
 require 'securerandom'
 require 'set'
 require_relative 'exceptions'
+
 class GaptoolServer < Sinatra::Application
 
   def require_parameters(required_keys, data)
@@ -47,8 +48,26 @@ class GaptoolServer < Sinatra::Application
        zone: data['zone']
      }
     )
+
+    # Tag instance
+    role = data['role']
+    env = data['environment']
+    name = "#{role}-#{env}-#{instance[:id]}"
+    {'Name' => name, 'gaptool' => 'yes', 'role' => role, 'environment' => env}.each do |tag, value|
+      begin
+        Gaptool::EC2::tag_ec2_instance(instance[:instance], tag, value)
+      rescue => e
+        logger.error("Error while tagging: #{e}. Skipping tag")
+        Airbrake.notify_or_ignore(
+          e,
+          error_class: "EC2 Tag failed",
+          parameters: {instance: instance[:id], name: name, role: role, environment: env}
+        )
+      end
+    end
+
     # Add host tag
-    data.merge(instance.reject { |k, v| k == :id })
+    data.merge(instance.reject { |k, v| [:id, :instance].include?(k) })
     Gaptool::Data::addserver(instance[:id], data, secret)
     json({instance: instance[:id],
           ami: image_id,

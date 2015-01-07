@@ -1,9 +1,11 @@
 require 'aws-sdk'
 require 'securerandom'
+require 'logger'
 
 # encoding: utf-8
 module Gaptool
   module EC2
+    @@logger = Logger.new(STDERR)
 
     def self.configure_ec2 zone
       return if ENV['DRYRUN']
@@ -45,26 +47,52 @@ module Gaptool
       return sg.id
     end
 
-    def self.create_ec2_instance(ec2opts, data)
+    def self.create_ec2_instance(ec2opts, data, retries=3, sleeptime=0.5)
       if ENV['DRYRUN']
         id = "i-test#{SecureRandom.hex(2)}"
         return {id: id,
                 hostname: "test-#{id}.#{data[:zone].chop}.compute.amazonaws.com",
+                instance: nil,
                 launch_time: Time.now.to_s}
       end
       configure_ec2 data[:zone].chop
       ec2 = AWS::EC2.new
 
-      instance = ec2.instances.create(ec2opts)
-      instance.add_tag('Name', value: "#{data[:role]}-#{data[:env]}-#{instance.id}")
-      instance.add_tag('gaptool', :value => "yes")
+      i = 0
+      begin
+        instance = ec2.instances.create(ec2opts)
+        @@logger.debug("Spawned instance #{instance.id}")
+      rescue => e
+        i += 1
+        raise if i > retries
+        @@logger.error("Error while creating instance: #{e}: sleeping #{sleeptime}s and retrying (#{i}/#{retries})")
+        sleep sleeptime
+        retry
+      end
       launch_time = instance.launch_time.to_s
       launch_time = launch_time.empty? ? Time.now.to_s : launch_time
       {
         id: instance.id,
+        instance: instance,
         hostname: instance.public_dns_name,
         launch_time: launch_time
       }
+    end
+
+    def self.tag_ec2_instance(instance, key, value, retries=5, sleeptime=0.5)
+      return true if ENV['DRYRUN']
+      i = 0
+      begin
+        instance.add_tag(key, value: value)
+        @@logger.debug("Added tag #{key}=#{value} to #{instance.id}")
+        true
+      rescue => e
+        i += 1
+        raise if i > retries
+        @@logger.error("Error adding tag #{key} to #{instance.id}: #{e}: sleeping #{sleeptime}s and retrying (#{i}/#{retries})")
+        sleep sleeptime
+        retry
+      end
     end
 
     def self.terminate_ec2_instance(zone, id)
