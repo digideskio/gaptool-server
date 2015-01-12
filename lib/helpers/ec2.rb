@@ -89,7 +89,7 @@ module Gaptool
           Airbrake.notify_or_ignore(
             e,
             error_class: "EC2 public dns fail",
-            parameters: {instance: instance[:id], name: name, role: role, environment: env, hostname: nil}
+            parameters: {instance: instance[:id], role: data['role'], environment: data['environment'], hostname: nil}
           )
         else
           @@logger.error("Error getting hostname for instance: #{e}: sleeping #{sleeptime}s and retrying (#{i}/#{retries})")
