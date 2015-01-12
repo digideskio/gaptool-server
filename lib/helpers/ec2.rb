@@ -1,6 +1,7 @@
 require 'aws-sdk'
 require 'securerandom'
 require 'logger'
+require 'airbrake'
 
 # encoding: utf-8
 module Gaptool
@@ -76,10 +77,30 @@ module Gaptool
       rescue
         launch_time = Time.now.to_s
       end
+
+      i = 0
+      begin
+        hostname = instance.public_dns_name
+      rescue => e
+        i += 1
+        if i > retries
+          @@logger.error("Could not get hostname for instance #{instance} after #{retries} retries, setting to nil")
+          hostname = nil
+          Airbrake.notify_or_ignore(
+            e,
+            error_class: "EC2 public dns fail",
+            parameters: {instance: instance[:id], name: name, role: role, environment: env, hostname: nil}
+          )
+        else
+          @@logger.error("Error getting hostname for instance: #{e}: sleeping #{sleeptime}s and retrying (#{i}/#{retries})")
+          sleep sleeptime
+          retry
+        end
+      end
       {
         id: instance.id,
         instance: instance,
-        hostname: instance.public_dns_name,
+        hostname: hostname,
         launch_time: launch_time
       }
     end
