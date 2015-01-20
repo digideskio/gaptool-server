@@ -236,6 +236,15 @@ describe "Test API" do
     end
   end
 
+  it "should not find an host by id" do
+    add_and_register_server()['instance']
+    get '/instance/other'
+    expect(last_response.status).to eq(404)
+    expect(JSON.parse(last_response.body)).to eq(
+      {"result" => "error",
+       "message" => "instance with id 'other' not found"})
+  end
+
   it "should find all hosts by environment and role" do
     id1 = add_and_register_server()['instance']
     id2 = add_and_register_server()['instance']

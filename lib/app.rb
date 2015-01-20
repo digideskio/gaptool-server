@@ -17,8 +17,8 @@ class GaptoolServer < Sinatra::Application
   use Airbrake::Sinatra
 
   def error_response msg=''
-    message = "#{env['sinatra.error'].message}"
-    message = "#{msg} #{message}" unless msg.empty?
+    message = env['sinatra_error'].nil? ? "" : " #{env['sinatra.error'].message}"
+    message = "#{msg}#{message}" unless msg.empty?
     json result: 'error', message: message
   end
 

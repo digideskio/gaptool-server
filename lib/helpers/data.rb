@@ -258,7 +258,7 @@ module Gaptool
     end
 
     def self.stringify_apps(rs)
-      unless rs['apps'].nil?
+      if !rs.nil? && !rs['apps'].nil?
         rs['apps'] = rs['apps'].to_json
       end
       rs

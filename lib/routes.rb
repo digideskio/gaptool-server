@@ -158,7 +158,13 @@ class GaptoolServer < Sinatra::Application
   end
 
   get '/instance/:id' do
-    json Gaptool::Data::stringify_apps(Gaptool::Data::get_server_data(params[:id]))
+    rs = Gaptool::Data::get_server_data(params[:id])
+    if rs.nil?
+      status 404
+      error_response "instance with id '#{params[:id]}' not found"
+    else
+      json Gaptool::Data::stringify_apps(rs)
+    end
   end
 
   get '/hosts/:role/:environment' do
