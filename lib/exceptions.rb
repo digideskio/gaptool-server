@@ -18,10 +18,6 @@ class BadRequest < ClientError
   @code = 400
 end
 
-class Unauthenticated < ClientError
-  @code = 401
-end
-
 class Forbidden < ClientError
   @code = 403
 end

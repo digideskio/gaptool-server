@@ -32,6 +32,10 @@ class GaptoolServer < Sinatra::Application
     error_response
   end
 
+  def unauthenticated
+    halt(401, error_response("Unauthenticated"))
+  end
+
   error do
     status 500
     error_response
@@ -52,8 +56,8 @@ class GaptoolServer < Sinatra::Application
   before do
     if request.path_info != '/ping' && ENV['GAPTOOL_DISABLE_AUTH'].nil?
       user = Gaptool::Data.user(env['HTTP_X_GAPTOOL_USER'])
-      raise Unauthenticated if user.nil?
-      raise Unauthenticated unless user[:key] == env['HTTP_X_GAPTOOL_KEY']
+      return unauthenticated if user.nil?
+      return unauthenticated unless user[:key] == env['HTTP_X_GAPTOOL_KEY']
     end
   end
 
