@@ -14,7 +14,7 @@ namespace :ec2 do
   end
 
   desc "Rehash ec2 attributes for a single instance"
-  task :rehash_attrs_for [:instance] do |t, args|
+  task :rehash_attrs_for, [:instance] do |t, args|
     if args[:instance].nil?
       puts "Missing instance"
       return 1
@@ -24,7 +24,7 @@ namespace :ec2 do
   end
 
   desc "Rehash a single property for an instance"
-  task :rehash_attr_for [:instance, :property] do |t, args|
+  task :rehash_attr_for, [:instance, :property] do |t, args|
     if args[:instance].nil?
       puts "Missing instance"
       return 1
