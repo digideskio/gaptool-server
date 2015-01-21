@@ -43,30 +43,33 @@ module Gaptool
     end
 
     def self.rehash_properties_for_instance(instance_id)
+      res = {}
       %w[hostname itype security_group].each do |property|
-        self.rehash_property_for_instance(property, instance_id)
-      end.all?
+        res[property] = self.rehash_property_for_instance(property, instance_id, false)
+      end
+      Gaptool::set_server_data_attributes(instance_id, res)
     end
 
-    def self.rehash_property_for_instance(property, instance_id)
-      data = Gaptool::Data::get_server_data(instance_id)
-      property = property.to_s
-      return false if data[property].nil? || data[property].empty?
+    def self.rehash_property_for_instance(property, instance_id, save=true)
       Gaptool::EC2::configure_ec2 data['zone']
       ec2 = AWS::EC2.new
       instance = ec2.instances[instance_id]
+      return false if instance.nil?
       case property
       when "hostname"
-        data[property] = instance.public_dns_name
+        value = instance.public_dns_name
       when "itype"
-        data[property] = instance.instance_type
+        value = instance.instance_type
       when "security_group"
-        data[property] = instance.security_groups[0].name
+        value = instance.security_groups[0].name
       else
         return false
       end
-      Gaptool::Data.save_server_data(instance_id, data)
-      true
+      if save
+        Gaptool::Data.set_server_data_attr(instance_id, property, value)
+      else
+        value
+      end
     end
   end
 end
