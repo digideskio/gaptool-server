@@ -4,10 +4,12 @@ Dir.chdir(File.dirname(__FILE__))
 require 'shellwords'
 require 'rspec/core/rake_task'
 require_relative 'lib/helpers/redis'
+require_relative 'lib/helpers/ec2'
 require_relative 'lib/helpers/init'
 require_relative 'lib/helpers/rehash'
 
 DH = Gaptool::Data
+EC2 = Gaptool::EC2
 $stdout.sync = true
 
 def sys(cmd)
