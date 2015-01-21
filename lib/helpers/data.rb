@@ -162,6 +162,10 @@ module Gaptool
         amis = data.delete("amis") || {}
         overwrite_hash("role:#{role}:amis", amis)
       end
+      if data['sg']
+        sgs = data.delete("sg") || {}
+        overwrite_hash("role:#{role}:sg", sgs)
+      end
       if data['apps']
         apps = data.delete("apps") || []
         apps.each {|a| add_app(a, role)}
@@ -174,12 +178,16 @@ module Gaptool
       res = $redis.hgetall("role:#{role}")
       res['apps'] = apps_in_role(role)
       res['amis'] = $redis.hgetall("role:#{role}:amis")
+      res['sg'] = $redis.hgetall("role:#{role}:sg")
       res
     end
 
     def self.get_ami_for_role(role, region=nil)
-
       $redis.hget("role:#{role}:amis", region) || $redis.hget("amis", region)
+    end
+
+    def self.get_sg_for_role(role, environment)
+      $redis.hget("role:#{role}:sg", environment) || "#{role}-#{environment}"
     end
 
     def self.get_runlist_for_role(role)

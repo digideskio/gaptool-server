@@ -28,8 +28,8 @@ class GaptoolServer < Sinatra::Application
                               JSON.parse(request.body.read))
 
     secret = SecureRandom.hex(12)
-    security_group = data['security_group'] || Gaptool::Data::get_role_data(data['role'])["security_group"]
-    sgid = Gaptool::EC2::get_or_create_securitygroup(data['role'], data['environment'], data['zone'], security_group)
+    data['security_group'] = data['security_group'] || Gaptool::Data::get_sg_for_role(data['role'], data['environment'])
+    sgid = Gaptool::EC2::get_or_create_securitygroup(data['role'], data['environment'], data['zone'], data['security_group'])
     image_id = data['ami'] || Gaptool::Data::get_ami_for_role(data['role'], data['zone'].chop)
     data['terminable'] = data['terminable'].nil? ? true : !!data['terminable']
     data['secret'] = secret

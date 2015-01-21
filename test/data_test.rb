@@ -108,7 +108,8 @@ describe "data helpers" do
     role = DH.get_role_data("role")
     expect(role).to eq({"chef_runlist"=> ["recipe[myrecipe]"].to_json,
                         "apps" => [],
-                        "amis" => {}})
+                        "amis" => {},
+                        "sg" => {}})
     server = DH.get_server_data(instid)
     expect(server).to eq(data.merge("instance" => instid,
                                     "chef_runlist" => ["recipe[myrecipe]"],
@@ -123,6 +124,16 @@ describe "data helpers" do
     role = DH.get_role_data("role")
     expect(role).to eq({'ami' => 'ami-1234567',
                         "apps" => [],
-                        "amis" => {}})
+                        "amis" => {},
+                        "sg" => {}})
+  end
+
+    it "shoud get the sg for a node from the role" do
+      DH.save_role_data("role", ami: 'ami-1234567', "sg" => {"test" => "my_role"})
+      role = DH.get_role_data("role")
+      expect(role).to eq({'ami' => 'ami-1234567',
+                          "apps" => [],
+                          "amis" => {},
+                          "sg" => {"test" => "my_role"}})
   end
 end

@@ -79,6 +79,23 @@ describe "Test API" do
     expect(resp['chef_runlist']).to eq(['recipe[other]'])
   end
 
+  it "should get the security group from the role" do
+    DH.save_role_data(host_data['role'], "sg" => {host_data['environment'] => "mysg-in-role"})
+    id = add_and_register_server(host_data.reject{|k,v| k == 'security_group'})['instance']
+    get "/host/testrole/testenv/#{id}"
+    resp = JSON.parse(last_response.body)
+    expect(resp.keys).to include("security_group")
+    expect(resp['security_group']).to eq("mysg-in-role")
+  end
+
+  it "should get the default security group" do
+    id = add_and_register_server(host_data.reject{|k,v| k == 'security_group'})['instance']
+    get "/host/testrole/testenv/#{id}"
+    resp = JSON.parse(last_response.body)
+    expect(resp.keys).to include("security_group")
+    expect(resp['security_group']).to eq("#{host_data['role']}-#{host_data['environment']}")
+  end
+
   it "should remove default runlist" do
     id = add_and_register_server(host_data.merge("chef_runlist"=> ['recipe[init]']))['instance']
     get "/host/testrole/testenv/#{id}"
@@ -93,7 +110,6 @@ describe "Test API" do
     resp = JSON.parse(last_response.body)
     expect(resp.keys).not_to include("chef_runlist")
     expect(resp['chef_runlist']).to be(nil)
-
   end
 
   it "should get the ami from the role" do
