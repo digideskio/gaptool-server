@@ -1,5 +1,6 @@
 require_relative "ec2"
 require_relative "data"
+require "logger"
 
 module Gaptool
   module EC2
@@ -51,8 +52,12 @@ module Gaptool
     end
 
     def self.rehash_property_for_instance(property, instance_id, save=true)
-      Gaptool::EC2::configure_ec2 data['zone']
-      ec2 = AWS::EC2.new
+      logger = Logger.new(STDOUT)
+      data = Gaptool::Data.get_server_data(instance_id)
+      return false if data.nil? || data['zone'].nil? || data['zone'].empty?
+      Gaptool::EC2::configure_ec2 data['zone'].chop
+      ec2 = AWS::EC2.new(region: data['zone'].chop)
+      logger.info("Updating #{property} for #{instance_id} in zone #{data['zone'].chop}")
       instance = ec2.instances[instance_id]
       return false if instance.nil?
       case property
@@ -66,6 +71,7 @@ module Gaptool
         return false
       end
       if save
+        logger.info("Setting #{property} to #{value} for #{instance_id}")
         Gaptool::Data.set_server_data_attr(instance_id, property, value)
       else
         value
