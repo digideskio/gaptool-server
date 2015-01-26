@@ -48,7 +48,7 @@ module Gaptool
       %w[hostname itype security_group].each do |property|
         res[property] = self.rehash_property_for_instance(property, instance_id, false)
       end
-      Gaptool::set_server_data_attributes(instance_id, res)
+      Gaptool::Data::set_server_data_attributes(instance_id, res)
     end
 
     def self.rehash_property_for_instance(property, instance_id, save=true)
@@ -70,8 +70,8 @@ module Gaptool
       else
         return false
       end
+      logger.info("Setting #{property} to #{value} for #{instance_id}")
       if save
-        logger.info("Setting #{property} to #{value} for #{instance_id}")
         Gaptool::Data.set_server_data_attr(instance_id, property, value)
       else
         value
