@@ -177,11 +177,11 @@ class GaptoolServer < Sinatra::Application
       data = JSON.parse(request.body.read)
       if !data['hidden'].nil?
         hidden = !!data['hidden']
-        rs[:hidden] = hidden if hidden == true
-        rs.delete(:hidden) if hidden == false
+        rs["hidden"] = hidden if hidden == true
+        rs.delete("hidden") if hidden == false
       end
       if !data['terminable'].nil?
-        rs[:terminable] = !!data['terminable']
+        rs["terminable"] = !!data['terminable']
       end
       Gaptool::Data::save_server_data params[:id], rs
       json Gaptool::Data::stringify_apps(rs)
