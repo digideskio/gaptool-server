@@ -96,6 +96,86 @@ describe "Test API" do
     expect(resp['security_group']).to eq("#{host_data['role']}-#{host_data['environment']}")
   end
 
+  it "should set instance unterminable" do
+    id = add_and_register_server()['instance']
+
+    get "/instance/#{id}"
+    expect(last_response.status).to eq(200)
+    resp = JSON.parse(last_response.body)
+    expect(resp.keys).not_to include("terminable")
+
+    patch "/instance/#{id}", {terminable: false}.to_json
+    expect(last_response.status).to eq(200)
+    resp = JSON.parse(last_response.body)
+    expect(resp['terminable']).to eq(false)
+
+    get "/instance/#{id}"
+    expect(last_response.status).to eq(200)
+    resp = JSON.parse(last_response.body)
+    expect(resp['terminable']).to eq(false)
+
+    post '/terminate', {'id' => id}.to_json
+    expect(last_response.status).to eq(409)
+
+    patch "/instance/#{id}", {terminable: true}.to_json
+    expect(last_response.status).to eq(200)
+    resp = JSON.parse(last_response.body)
+    expect(resp['terminable']).to eq(true)
+
+    post '/terminate', {'id' => id}.to_json
+    expect(last_response.status).to eq(200)
+  end
+
+  it "should set an instance as hidden" do
+    id = add_and_register_server()['instance']
+
+    get "/instance/#{id}"
+    expect(last_response.status).to eq(200)
+    resp = JSON.parse(last_response.body)
+    expect(resp.keys).not_to include("hidden")
+
+    patch "/instance/#{id}", {hidden: false}.to_json
+    expect(last_response.status).to eq(200)
+    resp = JSON.parse(last_response.body)
+    expect(resp.keys).not_to include("hidden")
+
+    get "/instance/#{id}"
+    expect(last_response.status).to eq(200)
+    resp = JSON.parse(last_response.body)
+    expect(resp.keys).not_to include("hidden")
+
+    patch "/instance/#{id}", {hidden: true}.to_json
+    expect(last_response.status).to eq(200)
+    resp = JSON.parse(last_response.body)
+    expect(resp['hidden']).to eq(true)
+
+    get "/instance/#{id}"
+    expect(last_response.status).to eq(200)
+    resp = JSON.parse(last_response.body)
+    expect(resp['hidden']).to eq(true)
+
+    get "/host/#{host_data['role']}/#{host_data['environment']}/#{id}"
+    expect(last_response.status).to eq(200)
+    resp = JSON.parse(last_response.body)
+    expect(resp['hidden']).to eq(true)
+
+    get "/hosts"
+    expect(last_response.status).to eq(200)
+    expect(JSON.parse(last_response.body)).to eq([])
+
+    get "/hosts/#{host_data['role']}"
+    expect(last_response.status).to eq(200)
+    expect(JSON.parse(last_response.body)).to eq([])
+
+    get "/hosts/#{host_data['role']}/#{host_data['environment']}"
+    expect(last_response.status).to eq(200)
+    expect(JSON.parse(last_response.body)).to eq([])
+
+    get "/hosts/ALL/#{host_data['environment']}"
+    expect(last_response.status).to eq(200)
+    expect(JSON.parse(last_response.body)).to eq([])
+  end
+
   it "should remove default runlist" do
     id = add_and_register_server(host_data.merge("chef_runlist"=> ['recipe[init]']))['instance']
     get "/host/testrole/testenv/#{id}"

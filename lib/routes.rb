@@ -138,7 +138,7 @@ class GaptoolServer < Sinatra::Application
   get '/hosts' do
     servers = Gaptool::Data::servers.map do |inst|
       Gaptool::Data::get_server_data inst
-    end.select{ |s| !s['registered']}
+    end.select{ |s| !s['registered'] && !s['hidden'] == true}
     json servers
   end
 
@@ -153,7 +153,7 @@ class GaptoolServer < Sinatra::Application
   get '/hosts/:role' do
     servers =  Gaptool::Data::servers_in_role(params[:role]).map do |inst|
       Gaptool::Data::get_server_data inst
-    end.select{ |s| !s['registered'] }
+    end.select{ |s| !s['registered'] && !s['hidden'] == true}
     json servers
   end
 
@@ -167,6 +167,26 @@ class GaptoolServer < Sinatra::Application
     end
   end
 
+  patch '/instance/:id' do
+    rs = Gaptool::Data::get_server_data(params[:id])
+    if rs.nil?
+      status 404
+      error_response "instance with id '#{params[:id]}' not found"
+    else
+      data = JSON.parse(request.body.read)
+      if !data['hidden'].nil?
+        hidden = !!data['hidden']
+        rs[:hidden] = hidden if hidden == true
+        rs.delete(:hidden) if hidden == false
+      end
+      if !data['terminable'].nil?
+        rs[:terminable] = !!data['terminable']
+      end
+      Gaptool::Data::save_server_data params[:id], rs
+      json Gaptool::Data::stringify_apps(rs)
+    end
+  end
+
   get '/hosts/:role/:environment' do
     if params[:role] == 'ALL'
       list = Gaptool::Data::servers_in_env params[:environment]
@@ -174,8 +194,9 @@ class GaptoolServer < Sinatra::Application
       list = Gaptool::Data::servers_in_role_env params[:role], params[:environment]
     end
     servers = list.map do |inst|
-      Gaptool::Data::stringify_apps(Gaptool::Data::get_server_data(inst))
-    end
+      data = Gaptool::Data::get_server_data(inst)
+      Gaptool::Data::stringify_apps(data)
+    end.delete_if {|s| s['hidden']}
 
     json servers
   end

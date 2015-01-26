@@ -152,6 +152,10 @@ module Gaptool
         rs.delete('terminable')
       end
 
+      if !rs['hidden'].nil? && rs['hidden'] == "true"
+        rs['hidden'] = true
+      end
+
       if opts[:force_runlist] && rs['chef_runlist'].nil?
         rs['chef_runlist'] = default_runlist
       end
