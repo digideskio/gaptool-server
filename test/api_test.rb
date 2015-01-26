@@ -306,6 +306,30 @@ describe "Test API" do
     expect(JSON.parse(last_response.body).to_set).to eq(exp_data)
   end
 
+  it "should find one hidden host" do
+    id1 = add_and_register_server()['instance']
+    id2 = add_and_register_server()['instance']
+    patch "/instance/#{id1}", {hidden: true}.to_json
+    %W(/hosts /hosts/#{host_data['role']} /hosts/#{host_data['role']}/#{host_data['environment']} /hosts/ALL/#{host_data['environment']}).each do |url|
+      get url
+      expect(last_response.status).to eq(200)
+      res = JSON.parse(last_response.body).map{|x| x.delete('apps'); x}.to_set
+      exp_data = [host_data.reject{|k,v| k == 'terminable'}.merge({'instance' => id2,
+                                                                   'chef_runlist' => expanded_runlist})].to_set
+      expect(res).to eq(exp_data)
+      get url, {hidden: true}
+      expect(last_response.status).to eq(200)
+      exp_data = [
+        host_data.reject{|k,v| k == 'terminable'}.merge({'instance' => id1,
+                                                        'chef_runlist' => expanded_runlist,
+                                                        'hidden' => true}),
+        host_data.reject{|k,v| k == 'terminable'}.merge({'instance' => id2,
+                                                        'chef_runlist' => expanded_runlist})
+      ].to_set
+      expect(JSON.parse(last_response.body).map{|x| x.delete('apps'); x}.to_set).to eq(exp_data)
+    end
+  end
+
   it "should find an host by role" do
     other = host_data.merge({'role' => 'otherrole'})
     id1 = add_and_register_server(other)['instance']
