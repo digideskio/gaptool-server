@@ -1,4 +1,10 @@
 namespace :ec2 do
+
+  desc "Tag all (untagged) instances with role and environment"
+  task :retag do |t|
+    EC2.retag
+  end
+
   desc "Rehash instances"
   task :rehash do |t|
     EC2.rehash

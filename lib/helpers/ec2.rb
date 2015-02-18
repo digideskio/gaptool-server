@@ -142,5 +142,20 @@ module Gaptool
         hostname: instance.dns_name
       }
     end
+
+    def self.retag()
+      logger = Logger.new(STDOUT)
+      Gaptool::Data::servers.each do |id|
+        data = Gaptool::Data.get_server_data(id)
+        next if data.nil? || data['zone'].nil? || data['zone'].empty?
+        Gaptool::EC2::configure_ec2 data['zone'].chop
+        ec2 = AWS::EC2.new(region: data['zone'].chop)
+        instance = ec2.instances[id]
+        next if instance.tags.role && instance.tags.environment
+        logger.info("Retagging instance #{id} in zone #{data['zone'].chop}")
+        instance.tags.role = data['role']
+        instance.tags.environment = data['environment']
+      end
+    end
   end
 end
