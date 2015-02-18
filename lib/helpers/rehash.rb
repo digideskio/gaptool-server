@@ -67,6 +67,8 @@ module Gaptool
         value = instance.instance_type
       when "security_group"
         value = instance.security_groups[0].name
+      when "launch_time"
+        value = instance.launch_time.to_i
       else
         return false
       end
