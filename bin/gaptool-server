@@ -8,4 +8,4 @@ rescue LoadError
   root = File.realpath(File.join(File.dirname(__FILE__), ".."))
 end
 Dir.chdir(root)
-exec "unicorn #{ARGV.join(" ")}"
+exec "puma #{ARGV.join(" ")}"

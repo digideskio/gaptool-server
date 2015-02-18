@@ -16,4 +16,4 @@ RUN chown -R gaptool:gaptool /opt/gaptool
 USER gaptool
 EXPOSE 3000
 
-CMD ["/opt/gaptool/bin/gaptool-server", "--listen=0.0.0.0:3000"]
+CMD ["/opt/gaptool/bin/gaptool-server", "-b tcp://0.0.0.0:3000", "-t 8:16", "--preload", "-w 2"]

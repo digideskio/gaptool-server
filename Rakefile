@@ -32,7 +32,7 @@ unless File.exists?('/.dockerenv')
 
   desc "Start the HTTP server"
   task :server do
-    exec "unicorn -p 3000 #{Shellwords.join(ARGV[1..-1])}"
+    exec "puma -p 3000 --preload -t 8:32 -w 3 #{Shellwords.join(ARGV[1..-1])}"
   end
 
   desc "Bump the version"
