@@ -16,6 +16,7 @@ describe "Test API" do
     header 'X_GAPTOOL_KEY',  'test'
     $redis.flushall
     DH.useradd('test', 'test')
+    $time = Time.now
   end
 
   def add_and_register_server data=nil
@@ -45,7 +46,8 @@ describe "Test API" do
       'terminable' => true,
       'zone' => 'my-zone-1a',
       'itype' => 'm1.type',
-      "hostname" => 'fake.hostname.gild.com'
+      "hostname" => 'fake.hostname.gild.com',
+      "launch_time" => $time.to_s
     }
   end
 
@@ -67,7 +69,8 @@ describe "Test API" do
   it "should create a instance" do
     post '/init', host_data.to_json
     expect(last_response.status).to eq(200)
-    expect(JSON.parse(last_response.body).keys).to eq(["instance", "ami", "role", "hostname", "launch_time", "environment", "secret", "terminable", "security_group"])
+    expect(JSON.parse(last_response.body).keys).to eq(["instance", "ami", "role", "hostname", "launch_time",
+                                                       "environment", "secret", "terminable", "security_group"])
   end
 
   it "should get the runlist from the role" do

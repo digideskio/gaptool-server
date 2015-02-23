@@ -67,7 +67,7 @@ class GaptoolServer < Sinatra::Application
     end
 
     # Add host tag
-    data.merge(instance.reject { |k, v| [:id, :instance].include?(k) })
+    data.merge!(instance.reject { |k, v| [:id, :instance].include?(k) })
     Gaptool::Data::addserver(instance[:id], data, secret)
     json({instance: instance[:id],
           ami: image_id,
