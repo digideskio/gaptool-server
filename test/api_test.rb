@@ -47,7 +47,7 @@ describe "Test API" do
       'zone' => 'my-zone-1a',
       'itype' => 'm1.type',
       "hostname" => 'fake.hostname.gild.com',
-      "launch_time" => $time.to_s
+      "launch_time" => $time.to_i
     }
   end
 

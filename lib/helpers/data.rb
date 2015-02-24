@@ -39,7 +39,7 @@ module Gaptool
       if !key.nil? && !data.nil? && !data.empty?
         $redis.multi do
           $redis.del(key)
-          $redis.hmset(key, *data.select{ |k,v| !v.nil? && ((v.is_a?(String) && !v.empty?) || !!v == v)}.flatten)
+          $redis.hmset(key, *data.select{ |k,v| !v.nil? && ((v.is_a?(String) && !v.empty?) || (v.is_a?(Integer)) || !!v == v)}.flatten)
         end
       end
     end
@@ -161,6 +161,7 @@ module Gaptool
       end
 
       rs.delete_if {|k,v| v.nil? || (!!v != v && v.empty?)}
+      rs['launch_time'] = rs['launch_time'].to_i if rs['launch_time']
       rs['apps'] = apps_in_role(rs['role'])
       rs
     end
