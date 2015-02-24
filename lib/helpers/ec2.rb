@@ -94,7 +94,6 @@ module Gaptool
       i = 0
       begin
         launch_time = instance.launch_time.to_i
-        raise if launch_time.empty?
 
       rescue => e
         i += 1
