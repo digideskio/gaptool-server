@@ -94,6 +94,7 @@ module Gaptool
       i = 0
       begin
         launch_time = instance.launch_time.to_i
+        raise unless launch_time.is_a? Integer
 
       rescue => e
         i += 1
@@ -111,6 +112,8 @@ module Gaptool
           retry
         end
       end
+
+      @@logger.info {"Instance #{instance.id} launch_time: #{launch_time} #{instance.launch_time}"}
 
       {
         id: instance.id,
