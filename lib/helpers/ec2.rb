@@ -54,7 +54,7 @@ module Gaptool
         return {id: id,
                 hostname: "test-#{id}.#{data[:zone].chop}.compute.amazonaws.com",
                 instance: nil,
-                launch_time: Time.now.to_s}
+                launch_time: Time.now.to_i}
       end
       configure_ec2 data[:zone].chop
       ec2 = AWS::EC2.new
@@ -69,13 +69,6 @@ module Gaptool
         @@logger.error("Error while creating instance: #{e}: sleeping #{sleeptime}s and retrying (#{i}/#{retries})")
         sleep sleeptime
         retry
-      end
-
-      begin
-        launch_time = instance.launch_time.to_s
-        launch_time = launch_time.empty? ? Time.now.to_s : launch_time
-      rescue
-        launch_time = Time.now.to_s
       end
 
       i = 0
@@ -97,6 +90,29 @@ module Gaptool
           retry
         end
       end
+
+      i = 0
+      begin
+        launch_time = instance.launch_time.to_i
+        raise if launch_time.empty?
+
+      rescue => e
+        i += 1
+        if i > retries
+          @@logger.error("Cloud not get launch time for instance #{instance} after #{retries} retries. Setting to now()")
+          launch_time = Time.now.to_i
+          Airbrake.notify_or_ignore(
+            e,
+            error_class: "EC2 get launch_time fail",
+            parameters: {instance: instance[:id], role: data['role'], environment: data['environment'], hostname: nil}
+          )
+        else
+          @@logger.error("Error getting launch_time for instance: #{e}: sleeping #{sleeptime}s and retrying (#{i}/#{retries})")
+          sleep sleeptime
+          retry
+        end
+      end
+
       {
         id: instance.id,
         instance: instance,
