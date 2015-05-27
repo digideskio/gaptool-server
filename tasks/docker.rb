@@ -23,17 +23,17 @@ unless File.exists?('/.dockerenv')
 
     desc "Run tests w/ docker"
     task :test => :build do
-      sys(%w(fig run --rm gaptool rake test))
+      sys(%w(docker-compose run --rm gaptool rake test))
     end
 
     desc "Stop docker containers"
     task :stop do
-      sys(%w(fig stop))
+      sys(%w(docker-compose stop))
     end
 
     desc "Start docker containers"
     task :start do
-      sys(%w(fig start))
+      sys(%w(docker-compose start))
     end
 
     desc "Restart docker containers"
@@ -41,19 +41,19 @@ unless File.exists?('/.dockerenv')
 
     desc "Stop and remove docker containers (alias 'rm')"
     task :remove => :stop do
-      sys(%w(fig rm --force))
+      sys(%w(docker-compose rm --force))
     end
 
     task :rm => :remove
 
     desc "Recreate docker containers without building"
     task :recreate do
-      sys(%w(fig up -d))
+      sys(%w(docker-compose up -d))
     end
 
     desc "Run a command in the docker container"
     task :run do
-      exit sys(%W(fig run --rm gaptool #{ARGV[1..-1].shelljoin}))
+      exit sys(%W(docker-compose run --rm gaptool #{ARGV[1..-1].shelljoin}))
     end
   end
 
