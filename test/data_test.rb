@@ -105,7 +105,7 @@ describe "data helpers" do
   it "should get the runlist for a node from the role" do
     DH.save_role_data("role", chef_runlist: ["recipe[myrecipe]"].to_json)
     DH.addserver(instid, data, nil)
-    role = DH.get_role_data("role")
+    role = DH.get_role_data("role", "testenv")
     expect(role).to eq({"chef_runlist"=> ["recipe[myrecipe]"].to_json,
                         "apps" => [],
                         "amis" => {},
@@ -121,19 +121,19 @@ describe "data helpers" do
   it "shoud get the ami for a node from the role" do
     DH.save_role_data("role", ami: 'ami-1234567')
     DH.addserver(instid, data, nil)
-    role = DH.get_role_data("role")
+    role = DH.get_role_data("role", "testenv")
     expect(role).to eq({'ami' => 'ami-1234567',
                         "apps" => [],
                         "amis" => {},
                         "sg" => {}})
   end
 
-    it "shoud get the sg for a node from the role" do
-      DH.save_role_data("role", ami: 'ami-1234567', "sg" => {"test" => "my_role"})
-      role = DH.get_role_data("role")
-      expect(role).to eq({'ami' => 'ami-1234567',
-                          "apps" => [],
-                          "amis" => {},
-                          "sg" => {"test" => "my_role"}})
+  it "shoud get the sg for a node from the role" do
+    DH.save_role_data("role", ami: 'ami-1234567', "sg" => {"test" => "my_role"})
+    role = DH.get_role_data("role", "testenv")
+    expect(role).to eq({'ami' => 'ami-1234567',
+                        "apps" => [],
+                        "amis" => {},
+                        "sg" => {"test" => "my_role"}})
   end
 end

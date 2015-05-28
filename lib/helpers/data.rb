@@ -162,7 +162,7 @@ module Gaptool
 
       rs.delete_if {|k,v| v.nil? || (!!v != v && v.empty?)}
       rs['launch_time'] = rs['launch_time'].to_i if rs['launch_time']
-      rs['apps'] = apps_in_role(rs['role'])
+      rs['apps'] = apps_in_role(rs['role'], rs['environment'])
       rs
     end
 
@@ -177,16 +177,16 @@ module Gaptool
         overwrite_hash("role:#{role}:sg", sgs)
       end
       if data['apps']
-        apps = data.delete("apps") || []
-        apps.each {|a| add_app(a, role)}
+        apps = data.delete("apps")
+        apps.each {|env, app| add_app(app, role, env)}
       end
       overwrite_hash("role:#{role}", data)
       $redis.sadd("roles", role)
     end
 
-    def self.get_role_data(role)
+    def self.get_role_data(role, environment=nil)
       res = $redis.hgetall("role:#{role}")
-      res['apps'] = apps_in_role(role)
+      res['apps'] = environment ? apps_in_role(role, environment) : []
       res['amis'] = $redis.hgetall("role:#{role}:amis")
       res['sg'] = $redis.hgetall("role:#{role}:sg")
       res
@@ -236,12 +236,13 @@ module Gaptool
       Hash[$redis.smembers("roles").map {|r| [r, get_role_data(r)] }]
     end
 
-    def self.add_app(name, role)
+    def self.add_app(name, role, environment)
       return if name.nil? || role.nil?
       $redis.multi do
         $redis.sadd("apps", name)
-        $redis.sadd("role:#{role}:apps", name)
-        $redis.set("app:#{name}", role)
+        $redis.sadd("apps:#{environment}", name)
+        $redis.sadd("role:#{role}:#{environment}:apps", name)
+        $redis.hset("app:#{name}", environment, role)
       end
     end
 
@@ -249,12 +250,14 @@ module Gaptool
       return if name.nil?
       key = "app:#{name}"
       $redis.watch(key) do
-        role = $redis.get(key)
-        if !role.nil?
+        roles = $redis.hgetall(key)
+        if !roles.nil?
           $redis.multi do |m|
             m.del(key)
             m.srem("apps", name)
-            m.srem("role:#{role}:apps", name)
+            roles.each do |env, role|
+              m.srem("role:#{role}:#{env}:apps", name)
+            end
           end
         else
           $redis.unwatch
@@ -263,16 +266,15 @@ module Gaptool
     end
 
     def self.get_app_data(app)
-      role = $redis.get("app:#{app}")
-      return {"role" => role } unless role.nil?
+      return $redis.hgetall("app:#{app}")
     end
 
     def self.apps
       $redis.smembers("apps")
     end
 
-    def self.apps_in_role(role)
-      $redis.smembers("role:#{role}:apps")
+    def self.apps_in_role(role, environment)
+      $redis.smembers("role:#{role}:#{environment}:apps")
     end
 
     def self.stringify_apps(rs)

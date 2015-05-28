@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+#
+# Convert all apps for new data format
+
+libpath = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
+$:.unshift(libpath)
+require "#{libpath}/helpers/redis"
+require "#{libpath}/helpers/data"
+DH = Gaptool::Data
+
+# -        $redis.sadd("role:#{role}:apps", name)
+# -        $redis.set("app:#{name}", role)
+# +        $redis.sadd("apps:#{environment}", name)
+# +        $redis.sadd("role:#{role}:#{environment}:apps", name)
+# +        $redis.hset("app:#{name}", environment, role)
+# -        role = $redis.get(key)
+# +        roles = $redis.hgetall(key)
+# -      role = $redis.get("app:#{app}")
+# +      return $redis.hgetall("app:#{app}")
+# -      $redis.smembers("role:#{role}:apps")
+# +      $redis.smembers("apps:#{environment}")
+# +      $redis.smembers("role:#{role}:#{environment}:apps")
+
+puts 'Removing role:*:apps'
+$redis.keys("role:*:apps").each {|k| $redis.del(k)}
+puts "Migrating apps"
+$redis.keys("app:*").each do |key|
+  app = key.sub(/app:/, "")
+  puts " * app: #{app} (#{key})"
+  role = $redis.get(key)
+  $redis.del("app:#{app}")
+  %w(staging production).each do |env|
+      DH.add_app(app, role, env)
+  end
+end

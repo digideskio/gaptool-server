@@ -143,11 +143,23 @@ class GaptoolServer < Sinatra::Application
   end
 
   get '/apps' do
-    out = {}
-    Gaptool::Data.apps.each do |app|
-      out["app:#{app}"] = Gaptool::Data::get_app_data(app)
+    json(Hash[Gaptool::Data.apps.map {|a| ["app:#{a}", Gaptool::Data::get_app_data(a)]}])
+  end
+
+  get '/app/:app/:environment/hosts' do
+    app_data = Gaptool::Data::get_app_data(params[:app])
+    unless app_data
+      status 404
+      error_response "app '#{params[:apps]}' not found"
     end
-    json out
+
+    role = app_data[params[:environment]]
+    list = Gaptool::Data::servers_in_role_env role, params[:environment]
+    filter = !!params['hidden'] ? Proc.new {|s| false } : Proc.new { |s| s['hidden']}
+    json(list.map do |inst|
+      data = Gaptool::Data::get_server_data(inst)
+      Gaptool::Data::stringify_apps(data)
+    end.delete_if(&filter))
   end
 
   get '/hosts/:role' do
