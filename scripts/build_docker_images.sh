@@ -55,7 +55,7 @@ fi
 for (( i=0; i<${#additional_tags[@]}; i++ )) do
     t=${additional_tags[$i]}
     echo "Setting tag $t"
-    docker tag gild/gaptool:$tag gild/gaptool:$t
+    docker tag -f gild/gaptool:$tag gild/gaptool:$t
 done
 
 if [ "$push" = true ]; then
