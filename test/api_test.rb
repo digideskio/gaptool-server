@@ -17,9 +17,9 @@ describe "Test API" do
   end
 
   before(:each) do
-    header 'X_GAPTOOL_USER', 'test'
-    header 'X_GAPTOOL_KEY',  'test'
-    header 'X_GAPTOOL_VERSION', @version
+    header 'X-GAPTOOL-USER', 'test'
+    header 'X-GAPTOOL-KEY',  'test'
+    header 'X-GAPTOOL-VERSION', @version
     $redis.flushall
     DH.useradd('test', 'test')
     $time = Time.now
@@ -418,7 +418,7 @@ describe "Test API" do
   end
 
   it "should fail as client did not send version" do
-    header 'X_GAPTOOL_VERSION', nil
+    header 'X-GAPTOOL-VERSION', nil
     get "/version"
     expect(last_response.status).to eq(400)
     resp = JSON.parse(last_response.body)
