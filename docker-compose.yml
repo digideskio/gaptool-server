@@ -5,12 +5,13 @@ gaptool:
         DRYRUN: 'true'
         AWS_ACCESS_KEY_ID: fakeid
         AWS_SECRET_ACCESS_KEY: fakesecret
+        GAPTOOL_CHECK_CLIENT_VERSION: 'true'
     links:
       - redis
     ports:
       - "3000:3000"
     entrypoint: /opt/gaptool/scripts/fig_entry.rb
-    command: bundle exec gaptool-server -p 3000 --preload -t 4:8
+    command: bundle exec bin/gaptool-server -p 3000 --preload -t 4:8
 redis:
     image: redis:2.8.17
     ports:

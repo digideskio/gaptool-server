@@ -15,7 +15,7 @@ COPY VERSION $GAPTOOL_HOME/VERSION
 COPY Gemfile.lock $GAPTOOL_HOME/Gemfile.lock
 USER $GAPTOOL_USER
 RUN chown $GAPTOOL_USER:$GAPTOOL_USER $GAPTOOL_HOME
-RUN bundle install --jobs=2 --path=. --deployment
+RUN bundle install --jobs=2 --path=/usr/local/bundle --deployment
 
 USER root
 ADD . $GAPTOOL_HOME
@@ -23,4 +23,4 @@ RUN chown -R $GAPTOOL_USER:$GAPTOOL_USER $GAPTOOL_HOME
 EXPOSE 3000
 USER $GAPTOOL_USER
 
-CMD ["bundle" "exec" "gaptool-server", "-b tcp://0.0.0.0:3000", "-t 8:16", "--preload", "-w 2"]
+CMD ["bundle", "exec", "bin/gaptool-server", "-b tcp://0.0.0.0:3000", "-t 8:16", "--preload", "-w 2"]
