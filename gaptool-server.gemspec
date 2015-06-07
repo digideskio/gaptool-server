@@ -34,6 +34,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'redis-namespace', '~> 1.5'
   s.add_runtime_dependency 'json', '~> 1.8'
   s.add_runtime_dependency 'rake', '~> 10'
+  s.add_runtime_dependency 'versionomy', '~> 0.4'
 
   s.add_development_dependency 'rspec', '~> 3.1'
   s.add_development_dependency 'rspec-mocks', '~> 3.1'

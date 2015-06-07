@@ -10,6 +10,7 @@ require 'net/ssh'
 require 'peach'
 require 'airbrake'
 require 'logger'
+require 'versionomy'
 require_relative 'exceptions'
 
 class GaptoolServer < Sinatra::Application
@@ -36,6 +37,24 @@ class GaptoolServer < Sinatra::Application
     halt(401, error_response("Unauthenticated"))
   end
 
+  def check_version(server, client)
+    @@client_versions ||= {}
+    cl_v = @@client_versions[client]
+    if cl_v.nil?
+      begin
+        @@client_versions[client] = Versionomy.parse(client)
+        cl_v = @@client_versions[client]
+      rescue
+        return false
+      end
+    end
+    cl_v.major == server.major && cl_v.minor == server.minor
+  end
+
+  def invalid_version(server, client)
+    halt(400, error_response("Invalid version #{client} (server: #{server})"))
+  end
+
   error do
     status 500
     error_response
@@ -51,6 +70,11 @@ class GaptoolServer < Sinatra::Application
     disable :sessions
     enable  :dump_errors
     disable :show_exceptions
+    version = File.read(File.realpath(
+      File.join(File.dirname(__FILE__), "..", 'VERSION')
+    )).strip
+    set(:version, version)
+    set(:version_parsed, Versionomy.parse(version))
   end
 
   before do
@@ -58,6 +82,9 @@ class GaptoolServer < Sinatra::Application
       user = Gaptool::Data.user(env['HTTP_X_GAPTOOL_USER'])
       return unauthenticated if user.nil?
       return unauthenticated unless user[:key] == env['HTTP_X_GAPTOOL_KEY']
+      if !ENV['GAPTOOL_CHECK_CLIENT_VERSION'].nil? && !check_version(settings.version_parsed, env['HTTP_X_GAPTOOL_VERSION'])
+        return invalid_version(settings.version, env['HTTP_X_GAPTOOL_VERSION'])
+      end
     end
   end
 

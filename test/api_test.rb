@@ -5,15 +5,21 @@ require 'set'
 describe "Test API" do
   before(:all) do
     ENV['DRYRUN'] = 'true'
+    ENV['GAPTOOL_CHECK_CLIENT_VERSION'] = 'true'
+    @version = File.read(File.realpath(
+      File.join(File.dirname(__FILE__), "..", 'VERSION')
+    )).strip.split(".")[0..1].join(".")
   end
 
   after(:all) do
     ENV['DRYRUN'] = nil
+    ENV['GAPTOOL_CHECK_CLIENT_VERSION'] = nil
   end
 
   before(:each) do
     header 'X_GAPTOOL_USER', 'test'
     header 'X_GAPTOOL_KEY',  'test'
+    header 'X_GAPTOOL_VERSION', @version
     $redis.flushall
     DH.useradd('test', 'test')
     $time = Time.now
@@ -409,5 +415,21 @@ describe "Test API" do
     get "/apps"
     expect(last_response.status).to eq(200)
     expect(JSON.parse(last_response.body)).to eq(apps_list)
+  end
+
+  it "should fail as client did not send version" do
+    header 'X_GAPTOOL_VERSION', nil
+    get "/version"
+    expect(last_response.status).to eq(400)
+    resp = JSON.parse(last_response.body)
+    expect(resp['result']).to eq('error')
+    expect(resp['message']).to match(/^Invalid version/)
+  end
+
+  it "should not check version for clients" do
+    ENV['GAPTOOL_CHECK_CLIENT_VERSION'] = nil
+    header 'X_GAPTOOL_VERSION', nil
+    get "/version"
+    expect(last_response.status).to eq(200)
   end
 end

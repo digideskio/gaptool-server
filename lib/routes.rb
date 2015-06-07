@@ -227,9 +227,7 @@ class GaptoolServer < Sinatra::Application
   end
 
   get '/version' do
-    version = File.read(File.realpath(
-      File.join(File.dirname(__FILE__), "..", 'VERSION')
-    )).strip
+    version = settings.version
     json server_version: version, api: {v0: "/"}
   end
 
