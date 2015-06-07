@@ -5,6 +5,5 @@ coverage.data
 .bundle
 .DS_Store
 *.gem
-Gemfile.lock
 redis_data/
 .env

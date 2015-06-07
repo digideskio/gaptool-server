@@ -23,7 +23,7 @@ unless File.exists?('/.dockerenv')
 
     desc "Run tests w/ docker"
     task :test => :build do
-      sys(%w(docker-compose run --rm gaptool rake test))
+      sys(%w(docker-compose run --rm gaptool bundle exec rake test))
     end
 
     desc "Stop docker containers"

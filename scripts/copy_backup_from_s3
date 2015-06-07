@@ -41,13 +41,13 @@ docker_config() {
 
 stop_containers() {
     echo "Removing containers"
-    rake docker:remove
+    bundel exec rake docker:remove
     echo -n "Removing redis dump: "
     rm -vf $dest
 }
 
 start_containers() {
-    rake docker:up
+    bundle exec rake docker:up
 }
 
 if [ $# -ge 1 ]; then
