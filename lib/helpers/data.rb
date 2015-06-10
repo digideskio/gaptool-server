@@ -26,6 +26,7 @@ module Gaptool
       $redis.sadd("instances", instance)
       $redis.sadd("role:#{role}:instances", instance)
       $redis.sadd("environment:#{environment}:instances", instance)
+      $redis.sadd("roles", role)
       unless secret.nil?
         data['registered'] = false
         $redis.sadd('instances:unregistered', instance)
