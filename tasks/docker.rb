@@ -6,7 +6,7 @@ unless File.exists?('/.dockerenv')
   namespace :docker do
     namespace :build do
       task :image do
-        sys(%w(./scripts/build_docker_images.sh))
+        sys(%w(./scripts/build_docker_images.sh -l))
         printimages
       end
 
