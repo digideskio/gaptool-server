@@ -106,7 +106,7 @@ describe "data helpers" do
     DH.save_role_data("role", chef_runlist: ["recipe[myrecipe]"].to_json)
     DH.addserver(instid, data, nil)
     role = DH.get_role_data("role", "testenv")
-    expect(role).to eq({"chef_runlist"=> ["recipe[myrecipe]"].to_json,
+    expect(role).to eq({"chef_runlist"=> ["recipe[myrecipe]"],
                         "apps" => [],
                         "amis" => {},
                         "sg" => {}})

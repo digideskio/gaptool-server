@@ -189,7 +189,30 @@ module Gaptool
       res['apps'] = environment ? apps_in_role(role, environment) : []
       res['amis'] = $redis.hgetall("role:#{role}:amis")
       res['sg'] = $redis.hgetall("role:#{role}:sg")
+      rl = get_runlist_for_role(role)
+      res['chef_runlist'] = rl unless rl.nil?
       res
+    end
+
+    def self.remove_role(role)
+      instances = servers_in_role(role)
+      res = {}
+      res[:instances] = instances unless instances.empty?
+      apps.each do |app|
+        get_app_data(app).each do |env, r|
+          if r == role
+            res[:apps] ||= []
+            res[:apps] << "#{app}:#{env}"
+          end
+        end
+      end
+      return res unless res.empty?
+      $redis.multi do |m|
+        m.srem("roles", role)
+        m.del("role:#{role}:amis")
+        m.del("role:#{role}:sg")
+      end
+      true
     end
 
     def self.get_ami_for_role(role, region=nil)
@@ -232,8 +255,8 @@ module Gaptool
       $redis.smembers("instances")
     end
 
-    def self.roles
-      Hash[$redis.smembers("roles").map {|r| [r, get_role_data(r)] }]
+    def self.roles(environment=nil)
+      Hash[$redis.smembers("roles").map {|r| [r, get_role_data(r, environment)] }]
     end
 
     def self.add_app(name, role, environment)
