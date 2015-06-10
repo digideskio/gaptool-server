@@ -11,9 +11,10 @@ set -u
 
 additional_tags=()
 run_tests=false
+force_latest=false
 push=false
 
-while getopts ":t:TP" opt; do
+while getopts ":t:TPl" opt; do
   case $opt in
     t)
         additional_tags+=($OPTARG)
@@ -23,6 +24,9 @@ while getopts ":t:TP" opt; do
     ;;
     P)
       push=true
+    ;;
+    l)
+      force_latest=true
     ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -37,7 +41,8 @@ done
 
 # get tag from git: if not tag on last commit (vX.Y.Z), default to
 # current branch name if no tag.
-tag=$(git log -n1 --pretty=format:%h%d | grep -o -E 'v[0-9]+\.[0-9]+\.[0-9]' || echo "latest")
+$force_latest && tag="latest"
+$force_latest || tag=$(git log -n1 --pretty=format:%h%d | grep -o -E 'v[0-9]+\.[0-9]+\.[0-9]' || echo "latest")
 
 if [[ "$tag" != "latest" ]]; then
   additional_tags+=("release")

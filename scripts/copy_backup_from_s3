@@ -41,7 +41,7 @@ docker_config() {
 
 stop_containers() {
     echo "Removing containers"
-    bundel exec rake docker:remove
+    bundle exec rake docker:remove
     echo -n "Removing redis dump: "
     rm -vf $dest
 }
