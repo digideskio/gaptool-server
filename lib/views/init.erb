@@ -1,7 +1,84 @@
 #!/bin/bash
 set -e
-cd /root
+set -u
+
+METADATA_URL_BASE="http://169.254.169.254/latest"
 apt-get update
+apt-get install -y curl e2fsprogs
+
+# Configure Raid - take into account xvdb or sdb
+root_drive="$(df -h | grep -E '/$' | awk '{print $1}')"
+
+if [[ "$root_drive" == /dev/xvd* ]]; then
+  echo "Detected 'xvd' drive naming scheme (root: $root_drive)"
+  DRIVE_SCHEME='xvd'
+else
+  echo "Detected 'sd' drive naming scheme (root: $root_drive)"
+  DRIVE_SCHEME='sd'
+fi
+
+# figure out how many ephemerals we have by querying the metadata API, and then:
+#  - convert the drive name returned from the API to the hosts DRIVE_SCHEME, if necessary
+#  - verify a matching device is available in /dev/
+drives=""
+ephemeral_count=0
+ephemerals=$(curl --silent $METADATA_URL_BASE/meta-data/block-device-mapping/ | grep ephemeral)
+for e in $ephemerals; do
+  echo "Probing $e .."
+  device_name=$(curl --silent $METADATA_URL_BASE/meta-data/block-device-mapping/"$e")
+  # might have to convert 'sdb' -> 'xvdb'
+  device_name="${device_name/sd/$DRIVE_SCHEME}"
+  device_path="/dev/$device_name"
+
+  # test that the device actually exists since you can request more ephemeral drives than are available
+  # for an instance type and the meta-data API will happily tell you it exists when it really does not.
+  if [ -b "$device_path" ]; then
+    echo "Detected ephemeral disk: $device_path"
+    drives="$drives $device_path"
+    ephemeral_count=$((ephemeral_count + 1 ))
+  else
+    echo "Ephemeral disk $e, $device_path is not present. skipping"
+  fi
+done
+
+if [ $ephemeral_count -eq 0 ]; then
+  echo "No ephemeral disk detected. exiting"
+  exit 0
+fi
+
+# ephemeral0 is typically mounted for us already. umount it here
+if cut -d' ' -f2 /proc/mounts | grep -q '/mnt'; then
+  umount /mnt
+fi
+
+# overwrite first few blocks in case there is a filesystem, otherwise mdadm will prompt for input
+for drive in $drives; do
+  dd if=/dev/zero of="$drive" bs=4096 count=1024
+done
+
+if [ $ephemeral_count -eq 1 ]; then
+  mkfs -t ext4 -L ephemeral /dev/${DRIVE_SCHEME}b
+  partprobe /dev/${DRIVE_SCHEME}b
+
+else
+  apt-get install -y mdadm
+  echo "Assembling /dev/md0 using $drives"
+  mdadm --create --verbose /dev/md0 --level=0 --raid-devices=$ephemeral_count $drives
+  echo DEVICE $drives > /etc/mdadm/mdadm.conf
+  mdadm --detail --scan >> /etc/mdadm/mdadm.conf
+  mkfs -t ext4 -L ephemeral /dev/md0
+  partprobe /dev/md0
+
+fi
+# Remove xvdb/sdb from fstab
+sed -i "/${DRIVE_SCHEME}b/d" /etc/fstab
+
+# Make raid appear on reboot
+echo "LABEL=ephemeral /mnt ext4 noatime,nobootwait,nodiratime 0 0" >> /etc/fstab
+mount -L ephemeral
+[ -x /sbin/mdadm ] && service mdadm restart
+
+cd /root
 apt-get install -ymq zsh git libssl-dev ruby1.9.1-full build-essential
 curl -LO https://www.getchef.com/chef/install.sh
 bash install.sh -v <%= chef_version %>
