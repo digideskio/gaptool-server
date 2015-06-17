@@ -2,9 +2,12 @@
 set -e
 set -u
 
+export DEBIAN_FRONTEND=noninteractive
+apt_get_install=(apt-get -o Dpkg::Options::="--force-confnew" --force-yes install)
+
 METADATA_URL_BASE="http://169.254.169.254/latest"
 apt-get update
-apt-get install -y curl e2fsprogs
+"${apt_get_install[@]}" curl e2fsprogs
 
 # Configure Raid - take into account xvdb or sdb
 root_drive="$(df -h | grep -E '/$' | awk '{print $1}')"
@@ -61,7 +64,7 @@ if [ $ephemeral_count -eq 1 ]; then
   partprobe /dev/${DRIVE_SCHEME}b
 
 else
-  apt-get install -y mdadm
+  "${apt_get_install[@]}" install -y mdadm
   echo "Assembling /dev/md0 using $drives"
   mdadm --create --verbose /dev/md0 --level=0 --raid-devices=$ephemeral_count $drives
   echo DEVICE $drives > /etc/mdadm/mdadm.conf
@@ -79,7 +82,8 @@ mount -L ephemeral
 [ -x /sbin/mdadm ] && service mdadm restart
 
 cd /root
-apt-get install -ymq zsh git libssl-dev ruby1.9.1-full build-essential
+"${apt_get_install[@]}" zsh git libssl-dev ruby1.9.1-full build-essential
+set +e
 curl -LO https://www.getchef.com/chef/install.sh
 bash install.sh -v <%= chef_version %>
 
