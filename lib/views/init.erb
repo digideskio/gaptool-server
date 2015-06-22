@@ -61,7 +61,7 @@ for drive in $drives; do
 done
 
 if [ $ephemeral_count -eq 1 ]; then
-  mkfs -t ext4 -L ephemeral /dev/${DRIVE_SCHEME}b
+  mkfs -t ext4 -m 0 -L ephemeral /dev/${DRIVE_SCHEME}b
   partprobe /dev/${DRIVE_SCHEME}b
 
 else
@@ -70,7 +70,7 @@ else
   mdadm --create --verbose /dev/md0 --level=0 --raid-devices=$ephemeral_count $drives
   echo DEVICE $drives > /etc/mdadm/mdadm.conf
   mdadm --detail --scan >> /etc/mdadm/mdadm.conf
-  mkfs -t ext4 -L ephemeral /dev/md0
+  mkfs -t ext4 -m 0 -L ephemeral /dev/md0
   partprobe /dev/md0
 
 fi
