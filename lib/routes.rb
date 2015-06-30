@@ -122,7 +122,12 @@ class GaptoolServer < Sinatra::Application
       'chefbranch' => chef_branch,
       'identity' => initkey,
       'appuser' => Gaptool::Data::get_config('appuser'),
-      'apps' => host_data['apps']
+      'apps' => host_data['apps'],
+      'gaptool' => {
+        'user' => env['HTTP_X_GAPTOOL_USER'],
+        'key' => env['HTTP_X_GAPTOOL_KEY'],
+        'url' => Gaptool::Data.get_config('url')
+      }
     }.to_json
 
     erb :init, locals: {
