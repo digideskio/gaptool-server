@@ -21,20 +21,20 @@ Gem::Specification.new do |s|
   s.summary = "gaptool-server for managing cloud resources"
   s.required_ruby_version = '~> 2.1'
 
-  s.add_runtime_dependency 'sinatra', "~> 1.4"
-  s.add_runtime_dependency 'sinatra-contrib', "~> 1.4"
-  s.add_runtime_dependency 'puma', "~> 2.11", '>= 2.11.1'
-  s.add_runtime_dependency 'redis', "~> 3.1"
-  s.add_runtime_dependency 'aws-sdk', "~> 1.54"
-  s.add_runtime_dependency 'net-ssh', "~> 2.9"
-  s.add_runtime_dependency 'peach', "~> 0.5"
-  s.add_runtime_dependency 'airbrake', "~> 4.2"
-  s.add_runtime_dependency 'racksh', "~> 1.0"
-  s.add_runtime_dependency 'pry', "~> 0.10"
-  s.add_runtime_dependency 'redis-namespace', '~> 1.5'
-  s.add_runtime_dependency 'json', '~> 1.8'
-  s.add_runtime_dependency 'rake', '~> 10'
-  s.add_runtime_dependency 'versionomy', '~> 0.4'
+  s.add_dependency 'sinatra', "~> 1.4"
+  s.add_dependency 'sinatra-contrib', "~> 1.4"
+  s.add_dependency 'puma', "~> 2.11", '>= 2.11.1'
+  s.add_dependency 'redis', "~> 3.1"
+  s.add_dependency 'aws-sdk', "~> 1.54"
+  s.add_dependency 'net-ssh', "~> 2.9"
+  s.add_dependency 'peach', "~> 0.5"
+  s.add_dependency 'airbrake', "~> 4.2"
+  s.add_dependency 'racksh', "~> 1.0"
+  s.add_dependency 'pry', "~> 0.10"
+  s.add_dependency 'redis-namespace', '~> 1.5'
+  s.add_dependency 'json', '~> 1.8'
+  s.add_dependency 'rake', '~> 10'
+  s.add_dependency 'versionomy', '~> 0.4'
 
   s.add_development_dependency 'rspec', '~> 3.1'
   s.add_development_dependency 'rspec-mocks', '~> 3.1'
