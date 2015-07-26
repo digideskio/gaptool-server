@@ -1,9 +1,9 @@
 #!/bin/bash
 
 if which realpath &>/dev/null; then
-    cd $(realpath $(dirname $0)/../)
+    cd "$(realpath "$(dirname "$0")"/../)"
 else
-    cd $(dirname $0)/../
+    cd "$(dirname "$0")/../"
 fi
 
 set -e
@@ -13,8 +13,10 @@ additional_tags=()
 run_tests=false
 force_latest=false
 push=false
+pull=false
+nocache=false
 
-while getopts ":t:TPl" opt; do
+while getopts ":t:TPlCp" opt; do
   case $opt in
     t)
         additional_tags+=($OPTARG)
@@ -24,6 +26,12 @@ while getopts ":t:TPl" opt; do
     ;;
     P)
       push=true
+    ;;
+    p)
+      pull=true
+    ;;
+    C)
+      nocache=true
     ;;
     l)
       force_latest=true
@@ -48,19 +56,23 @@ if [[ "$tag" != "latest" ]]; then
   additional_tags+=("release")
 fi
 
-build_cmd="docker build --rm -t gild/gaptool:$tag ."
+build_cmd="docker build"
+$pull && build_cmd="${build_cmd} --pull"
+$nocache && build_cmd="${build_cmd} --no-cache"
+build_cmd="${build_cmd} --rm -t gild/gaptool:$tag ."
+
 echo "Building docker image: $build_cmd"
 $build_cmd
 
 if [ "$run_tests" = true ]; then
   echo "Running tests in gild/gaptool:$tag"
-  docker run -a stdout -a stderr --rm -i -t gild/gaptool:$tag bundle exec rake test 2>&1
+  docker run -a stdout -a stderr --rm -i -t "gild/gaptool:$tag" bundle exec rake test 2>&1
 fi
 
 for (( i=0; i<${#additional_tags[@]}; i++ )) do
     t=${additional_tags[$i]}
     echo "Setting tag $t"
-    docker tag -f gild/gaptool:$tag gild/gaptool:$t
+    docker tag -f "gild/gaptool:$tag" "gild/gaptool:$t"
 done
 
 if [ "$push" = true ]; then
