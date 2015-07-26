@@ -1,4 +1,4 @@
-FROM ruby:2.1
+FROM ruby:2.2.2
 
 MAINTAINER Giacomo Bagnoli <giacomo@gild.com>
 
