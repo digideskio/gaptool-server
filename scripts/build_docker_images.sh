@@ -66,7 +66,7 @@ $build_cmd
 
 if [ "$run_tests" = true ]; then
   echo "Running tests in gild/gaptool:$tag"
-  docker run -a stdout -a stderr --rm -i -t "gild/gaptool:$tag" bundle exec rake test 2>&1
+  docker run -a stdout -a stderr --rm -i "gild/gaptool:$tag" bundle exec rake test 2>&1
 fi
 
 for (( i=0; i<${#additional_tags[@]}; i++ )) do
