@@ -1,42 +1,41 @@
 namespace :ec2 do
-
-  desc "Tag all (untagged) instances with role and environment"
-  task :retag do |t|
+  desc 'Tag all (untagged) instances with role and environment'
+  task :retag do |_t|
     EC2.retag
   end
 
-  desc "Rehash instances"
-  task :rehash do |t|
+  desc 'Rehash instances'
+  task :rehash do |_t|
     EC2.rehash
   end
 
-  desc "Rehash single attribute of all instances"
-  task :rehash_attr_all, [:property] do |t, args|
+  desc 'Rehash single attribute of all instances'
+  task :rehash_attr_all, [:property] do |_t, args|
     if args[:property].nil?
-      puts "Missing property"
+      puts 'Missing property'
       return 1
     end
     EC2.rehash_property(args[:property])
   end
 
-  desc "Rehash ec2 attributes for a single instance"
-  task :rehash_attrs_for, [:instance] do |t, args|
+  desc 'Rehash ec2 attributes for a single instance'
+  task :rehash_attrs_for, [:instance] do |_t, args|
     if args[:instance].nil?
-      puts "Missing instance"
+      puts 'Missing instance'
       return 1
     end
     res = EC2.rehash_properties_for_instance(args[:instance])
     return 1 unless res
   end
 
-  desc "Rehash a single property for an instance"
-  task :rehash_attr_for, [:instance, :property] do |t, args|
+  desc 'Rehash a single property for an instance'
+  task :rehash_attr_for, [:instance, :property] do |_t, args|
     if args[:instance].nil?
-      puts "Missing instance"
+      puts 'Missing instance'
       return 1
     end
     if args[:property].nil?
-      puts "Missing property"
+      puts 'Missing property'
       return 1
     end
     res = EC2.rehash_property_for_instance(args[:property], args[:instance])
@@ -46,5 +45,4 @@ namespace :ec2 do
       return 1
     end
   end
-
 end

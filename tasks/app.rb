@@ -1,6 +1,6 @@
 namespace :app do
-  desc "Add an application"
-  task :add, [:app, :role, :environment] do |t, args|
+  desc 'Add an application'
+  task :add, [:app, :role, :environment] do |_t, args|
     [:app, :role, :environment].each do |arg|
       abort("Missing parameter #{arg}") if args[arg].nil? || args[arg].empty?
     end
@@ -17,26 +17,26 @@ namespace :app do
     puts "Added app #{args[:app]}, role #{args[:role]}, environment: #{args[:environment]}"
   end
 
-  desc "Remove an application"
-  task :del, [:app] do |t, args|
+  desc 'Remove an application'
+  task :del, [:app] do |_t, args|
     unless args[:app].nil? || args[:app].empty?
       DH.remove_app(args[:app])
       puts "Removed app #{args[:app]}"
     end
   end
 
-  desc "Print app info"
-  task :info, [:app] do |t, args|
+  desc 'Print app info'
+  task :info, [:app] do |_t, args|
     info = DH.get_app_data(args[:app])
     if info.nil? || info.empty?
       puts "No such app #{args[:app]}"
     else
-      puts " * #{app} #{info.map {|k,v| "#{k}: #{v}"}.join(", ")}"
+      puts " * #{app} #{info.map { |k, v| "#{k}: #{v}" }.join(', ')}"
     end
   end
 
-  desc "Copy all apps for a role to a new env"
-  task :newenv, [:role, :oldenv, :newenv, :newrole] do |t, args|
+  desc 'Copy all apps for a role to a new env'
+  task :newenv, [:role, :oldenv, :newenv, :newrole] do |_t, args|
     [:role, :oldenv, :newenv].each do |k|
       abort "Missing parameter #{k}" if args[k].nil?
     end
@@ -48,11 +48,11 @@ namespace :app do
   end
 end
 
-desc "List apps"
+desc 'List apps'
 task :app do
-  puts "Apps:"
+  puts 'Apps:'
   DH.apps.each do |app|
     info = DH.get_app_data(app)
-    puts " * #{app} #{info.map {|k,v| "#{k}: #{v}"}.join(", ")}"
+    puts " * #{app} #{info.map { |k, v| "#{k}: #{v}" }.join(', ')}"
   end
 end

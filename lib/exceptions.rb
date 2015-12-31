@@ -1,13 +1,13 @@
 class HTTPError < StandardError
   @code = 500
 
-  def self.code
-    @code
+  class << self
+    attr_reader :code
   end
 
- def code
+  def code
     self.class.code
- end
+  end
 end
 
 class ClientError < HTTPError

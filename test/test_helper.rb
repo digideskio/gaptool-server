@@ -3,12 +3,17 @@ if ENV['COVERAGE']
   require 'simplecov'
   require 'simplecov-rcov'
 
-  class SimpleCov::Formatter::MergedFormatter
-    def format(result)
-       SimpleCov::Formatter::HTMLFormatter.new.format(result)
-       SimpleCov::Formatter::RcovFormatter.new.format(result)
+  module SimpleCov
+    module Formatter
+      class MergedFormatter
+        def format(result)
+          SimpleCov::Formatter::HTMLFormatter.new.format(result)
+          SimpleCov::Formatter::RcovFormatter.new.format(result)
+        end
+      end
     end
   end
+
   SimpleCov.formatter = SimpleCov::Formatter::MergedFormatter
   SimpleCov.start do
     add_filter '/test/'
@@ -17,7 +22,7 @@ if ENV['COVERAGE']
 end
 # Clear airbrake env if set
 ENV['AIRBRAKE_API_KEY'] = nil
-libpath = File.realpath(File.join(File.dirname(__FILE__), "..", "lib"))
+libpath = File.realpath(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'rspec'
 require 'rack/test'
 require 'fakeredis/rspec'
@@ -27,11 +32,8 @@ require "#{libpath}/app.rb"
 RSpec.configure do |conf|
   conf.include Rack::Test::Methods
   def app
-    GaptoolServer
+    Gaptool::Server
   end
 end
 
 DH = Gaptool::Data
-
-conn = Redis.new
-$redis = Redis::Namespace.new(:gt, redis:conn)

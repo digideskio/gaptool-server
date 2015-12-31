@@ -5,7 +5,7 @@ begin
   require 'gaptool-server'
   root = Gem.loaded_specs['gaptool-server'].full_gem_path
 rescue LoadError
-  root = File.realpath(File.join(File.dirname(__FILE__), ".."))
+  root = File.realpath(File.join(File.dirname(__FILE__), '..'))
 end
 Dir.chdir(root)
-exec "puma #{ARGV.join(" ")}"
+exec "puma #{ARGV.join(' ')}"

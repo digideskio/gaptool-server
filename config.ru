@@ -2,9 +2,8 @@
 
 ENV['DRYRUN'] = nil unless ENV['DRYRUN'] == 'true'
 
-libpath = File.expand_path(File.join(File.dirname(__FILE__), "lib"))
-$:.unshift(libpath)
-require "#{libpath}/helpers/redis"
+libpath = File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
+$LOAD_PATH.unshift(libpath)
 require "#{libpath}/app.rb"
 
-run GaptoolServer
+run Gaptool::Server

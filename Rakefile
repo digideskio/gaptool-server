@@ -14,28 +14,26 @@ $stdout.sync = true
 
 def sys(cmd)
   IO.popen(cmd) do |f|
-    until f.eof?
-      puts f.gets
-    end
+    puts f.gets until f.eof?
   end
-  $?.to_i
+  $CHILD_STATUS.to_i
 end
 
-Dir.glob('tasks/*.rb').each { |r| load r}
+Dir.glob('tasks/*.rb').each { |r| load r }
 
-unless File.exists?('/.dockerenv')
-  desc "Start the shell"
+unless File.exist?('/.dockerenv')
+  desc 'Start the shell'
   task :shell do
     exec "racksh #{Shellwords.join(ARGV[1..-1])}"
   end
-  task :sh => :shell
+  task sh: :shell
 
-  desc "Start the HTTP server"
+  desc 'Start the HTTP server'
   task :server do
     exec "puma -p 3000 --preload -t 8:32 -w 3 #{Shellwords.join(ARGV[1..-1])}"
   end
 
-  desc "Bump the version"
+  desc 'Bump the version'
   task :bump do
     version = File.read('VERSION').strip
     nver = version.next
@@ -44,29 +42,29 @@ unless File.exists?('/.dockerenv')
     f.close
     puts "Bumped #{version} => #{nver}"
     exec "git commit -m 'Bump version to v#{nver}' VERSION"
-    Rake::Task["tag"].invoke
-    Rake::Task["gem:build"].invoke
+    Rake::Task['tag'].invoke
+    Rake::Task['gem:build'].invoke
   end
 
-  desc "Tag git with VERSION"
+  desc 'Tag git with VERSION'
   task :tag do
-    exec "git tag v$(cat VERSION)"
+    exec 'git tag v$(cat VERSION)'
   end
 
-  desc "Push the git tag and the gem version"
-  task :push => :tag do
-    exec "git push origin v$(cat VERSION)"
-    Rake::Task["gem:push"].invoke
+  desc 'Push the git tag and the gem version'
+  task push: :tag do
+    exec 'git push origin v$(cat VERSION)'
+    Rake::Task['gem:push'].invoke
   end
 end
 
 task :help do
-  puts "Available tasks"
-  exec "rake -T"
+  puts 'Available tasks'
+  exec 'rake -T'
 end
 
 RSpec::Core::RakeTask.new :test do |task|
   task.pattern = Dir['test/*_test.rb']
 end
 
-task :default => :help
+task default: :help
