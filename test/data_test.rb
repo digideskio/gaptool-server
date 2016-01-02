@@ -11,8 +11,7 @@ describe 'data helpers' do
   end
 
   after(:all) do
-    keys = redis.keys('*').select { |k| !k.start_with?('gt:') }
-    expect(keys).to eq([])
+    redis.flushall
   end
 
   def data
