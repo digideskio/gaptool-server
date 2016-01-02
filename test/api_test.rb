@@ -368,8 +368,21 @@ describe 'Test API' do
     end
   end
 
-  it 'old client should have apps as strings' do
+  it 'old clients should receive apps as strings' do
     header 'X-GAPTOOL-VERSION', '0.7.0'
+    id = add_and_register_server['instance']
+    ["/instance/#{id}", "/host/testrole/testenv/#{id}", "/host/FAKE/FAKE/#{id}"].each do |url|
+      get url
+      expect(last_response.status).to eq(200)
+      exp_data = host_data.reject { |k, _v| k == 'terminable' }.merge('instance' => id,
+                                                                      'chef_runlist' => expanded_runlist,
+                                                                      'apps' => '[]')
+      expect(JSON.parse(last_response.body)).to eq(exp_data)
+    end
+  end
+
+  it 'clients with no version should be handled as old' do
+    header 'X-GAPTOOL-VERSION', nil
     id = add_and_register_server['instance']
     ["/instance/#{id}", "/host/testrole/testenv/#{id}", "/host/FAKE/FAKE/#{id}"].each do |url|
       get url

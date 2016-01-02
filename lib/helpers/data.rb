@@ -297,8 +297,9 @@ module Gaptool
     end
 
     def self.stringify_apps(rs, ver)
+      old = ver.nil? || (ver.major == 0 && ver.minor < 8)
       rs['apps'] = rs['apps'].to_json \
-        if ver.major == 0 && ver.minor < 8 && !rs.nil? && !rs['apps'].nil?
+        if old && !rs.nil? && !rs['apps'].nil?
       rs
     end
 
