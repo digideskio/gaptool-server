@@ -15,7 +15,7 @@ COPY VERSION $GAPTOOL_HOME/VERSION
 COPY Gemfile.lock $GAPTOOL_HOME/Gemfile.lock
 USER $GAPTOOL_USER
 RUN chown $GAPTOOL_USER:$GAPTOOL_USER $GAPTOOL_HOME
-RUN bundle install --jobs=2 --path=/usr/local/bundle --deployment
+RUN gem install bundler && bundle install --jobs=2 --path=/usr/local/bundle --deployment
 
 USER root
 ADD . $GAPTOOL_HOME
