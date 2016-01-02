@@ -142,8 +142,6 @@ module Gaptool
         rs[v] = get_config(v) if rs[v].nil? || rs[v].empty?
       end
 
-      rs['initkey'] = get_config('initkey') if opts[:initkey]
-
       if !rs['terminable'].nil? && rs['terminable'] == 'false'
         rs['terminable'] = false
       else
@@ -160,6 +158,29 @@ module Gaptool
       rs['launch_time'] = rs['launch_time'].to_i if rs['launch_time']
       rs['apps'] = apps_in_role(rs['role'], rs['environment'])
       rs
+    end
+
+    def self.server_chef_json(instance, env, data = {})
+      data ||= {}
+      hd = get_server_data(instance, force_runlist: true)
+      return nil if hd.nil?
+      {
+        'apps' => hd['apps'],
+        'branch' => 'master',
+        'chefbranch' => hd['chef_branch'],
+        'chefrepo' => hd['chef_repo'],
+        'deploy_apps' => hd['apps'],
+        'environment' => hd['environment'],
+        'gaptool' => {
+          'user' => env['HTTP_X_GAPTOOL_USER'],
+          'key' => env['HTTP_X_GAPTOOL_KEY'],
+          'url' => get_config('url')
+        },
+        'migrate' => false,
+        'role' => hd['role'],
+        'rollback' => false,
+        'run_list' => hd['chef_runlist']
+      }.merge(data)
     end
 
     def self.save_role_data(role, data)

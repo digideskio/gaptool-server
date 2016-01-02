@@ -101,38 +101,17 @@ module Gaptool
 
       hostname = Gaptool::EC2.get_ec2_instance_data(data['zone'].chop, instance_id)[:hostname]
       Gaptool::Data.set_server_data_attr(instance_id, 'hostname', hostname)
-      host_data = Gaptool::Data.get_server_data instance_id, initkey: true, force_runlist: true
-
-      chef_repo = host_data['chef_repo']
-      chef_branch = host_data['chef_branch']
-      chef_environment = host_data['environment']
-      # FIXME: remove init key from redis
       initkey = Gaptool::Data.get_config('initkey')
-      run_list = host_data['chef_runlist']
-
-      jdata = {
-        'run_list' => run_list,
-        'role' => data['role'],
-        'environment' => data['environment'],
-        'chefrepo' => chef_repo,
-        'chefbranch' => chef_branch,
-        'identity' => initkey,
-        'appuser' => Gaptool::Data.get_config('appuser'),
-        'apps' => host_data['apps'],
-        'gaptool' => {
-          'user' => env['HTTP_X_GAPTOOL_USER'],
-          'key' => env['HTTP_X_GAPTOOL_KEY'],
-          'url' => Gaptool::Data.get_config('url')
-        }
-      }.to_json
+      jdata = Gaptool::Data.server_chef_json(instance_id, env,
+                                             'identity': initkey)
 
       erb :init, locals: {
         initkey: initkey,
-        chef_branch: chef_branch,
-        chef_repo: chef_repo,
-        chef_environment: chef_environment,
+        chef_branch: jdata['chefbranch'],
+        chef_repo: jdata['chefrepo'],
+        chef_environment: jdata['environment'],
         chef_version: Gaptool::Data.ensure_config('chef_version', '11.16.4'),
-        json: jdata
+        json: jdata.to_json
       }
     end
 
@@ -190,6 +169,21 @@ module Gaptool
         error_response "instance with id '#{params[:id]}' not found"
       else
         json Gaptool::Data.stringify_apps(rs, client_version)
+      end
+    end
+
+    get '/instance/:id/attrs' do
+      begin
+        data = JSON.parse(request.body.read.to_s)
+      rescue
+        data = {}
+      end
+      rs = Gaptool::Data.server_chef_json(params[:id], env, data)
+      if rs.nil?
+        status 404
+        error_response "instance with id '#{params[:id]}' not found"
+      else
+        json rs
       end
     end
 

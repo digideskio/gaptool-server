@@ -368,6 +368,32 @@ describe 'Test API' do
     end
   end
 
+  it 'should return the host attr json' do
+    DH.set_config('chef_repo', 'FAKECHEFREPO')
+    DH.set_config('chef_branch', 'chefbranch')
+    DH.set_config('url', 'localhost:666')
+    id = add_and_register_server['instance']
+    get "/instance/#{id}/attrs"
+    expect(last_response.status).to eq(200)
+    expect(JSON.parse(last_response.body)).to eq(
+      'apps' => [],
+      'branch' => 'master',
+      'chefbranch' => 'chefbranch',
+      'chefrepo' => 'FAKECHEFREPO',
+      'deploy_apps' => [],
+      'environment' => host_data['environment'],
+      'gaptool' => {
+        'user' => 'test',
+        'key' => 'test',
+        'url' => 'localhost:666'
+      },
+      'migrate' => false,
+      'role' => host_data['role'],
+      'rollback' => false,
+      'run_list' => ['recipe[init]', 'recipe[myrecipe]']
+    )
+  end
+
   it 'old clients should receive apps as strings' do
     header 'X-GAPTOOL-VERSION', '0.7.0'
     id = add_and_register_server['instance']

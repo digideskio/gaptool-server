@@ -83,17 +83,6 @@ describe 'data helpers' do
     expect(c).to eq('value')
   end
 
-  it 'should return the initkey' do
-    DH.set_config('initkey', 'FAKEKEY')
-    DH.addserver(instid, data, nil)
-    server = DH.get_server_data(instid, initkey: true)
-    expect(server).to eq(data.merge('instance' => instid,
-                                    'chef_repo' => 'myrepo',
-                                    'chef_branch' => 'master',
-                                    'initkey' => 'FAKEKEY',
-                                    'apps' => []))
-  end
-
   it 'should get the runlist for a node from the role' do
     DH.save_role_data('role', chef_runlist: ['recipe[myrecipe]'].to_json)
     DH.addserver(instid, data, nil)
