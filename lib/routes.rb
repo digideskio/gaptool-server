@@ -167,7 +167,7 @@ module Gaptool
                end
       json(list.map do |inst|
         data = Gaptool::Data.get_server_data(inst)
-        Gaptool::Data.stringify_apps(data)
+        Gaptool::Data.stringify_apps(data, client_version)
       end.delete_if(&filter))
     end
 
@@ -189,7 +189,7 @@ module Gaptool
         status 404
         error_response "instance with id '#{params[:id]}' not found"
       else
-        json Gaptool::Data.stringify_apps(rs)
+        json Gaptool::Data.stringify_apps(rs, client_version)
       end
     end
 
@@ -207,7 +207,7 @@ module Gaptool
         end
         rs['terminable'] = !!data['terminable'] unless data['terminable'].nil?
         Gaptool::Data.save_server_data params[:id], rs
-        json Gaptool::Data.stringify_apps(rs)
+        json Gaptool::Data.stringify_apps(rs, client_version)
       end
     end
 
@@ -224,14 +224,14 @@ module Gaptool
                end
       servers = list.map do |inst|
         data = Gaptool::Data.get_server_data(inst)
-        Gaptool::Data.stringify_apps(data)
+        Gaptool::Data.stringify_apps(data, client_version)
       end.delete_if(&filter)
 
       json servers
     end
 
     get '/host/:role/:environment/:instance' do
-      json Gaptool::Data.stringify_apps(Gaptool::Data.get_server_data(params[:instance]))
+      json Gaptool::Data.stringify_apps(Gaptool::Data.get_server_data(params[:instance]), client_version)
     end
 
     get '/ssh/:role/:environment/:instance' do

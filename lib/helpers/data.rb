@@ -296,8 +296,9 @@ module Gaptool
       redis.smembers("role:#{role}:#{environment}:apps")
     end
 
-    def self.stringify_apps(rs)
-      rs['apps'] = rs['apps'].to_json if !rs.nil? && !rs['apps'].nil?
+    def self.stringify_apps(rs, ver)
+      rs['apps'] = rs['apps'].to_json \
+        if ver.major == 0 && ver.minor < 8 && !rs.nil? && !rs['apps'].nil?
       rs
     end
 

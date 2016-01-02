@@ -15,6 +15,15 @@ require_relative 'exceptions'
 
 module Gaptool
   class Server < Sinatra::Application
+    @versions = {}
+    class << self
+      attr_reader :versions
+    end
+
+    def versions
+      self.class.versions
+    end
+
     helpers Sinatra::JSON
     use Airbrake::Sinatra
 
@@ -38,15 +47,23 @@ module Gaptool
       halt(401, error_response('Unauthenticated'))
     end
 
-    def check_version(server, client)
-      cl_v = Versionomy.parse(client)
-      cl_v.major == server.major && cl_v.minor == server.minor
+    def client_version
+      client = env['HTTP_X_GAPTOOL_VERSION']
+      versions[client] ||= Versionomy.parse(client)
+    rescue
+      nil
+    end
+
+    def check_version
+      server = settings.version_parsed
+      client_version.major >= server.major && \
+        client_version.minor >= server.minor
     rescue
       false
     end
 
-    def invalid_version(server, client)
-      halt(400, error_response("Invalid version #{client} (server: #{server})"))
+    def invalid_version
+      halt(400, error_response("Invalid version #{client_version} (server: #{settings.version})"))
     end
 
     error do
@@ -76,9 +93,7 @@ module Gaptool
         user = Gaptool::Data.user(env['HTTP_X_GAPTOOL_USER'])
         return unauthenticated if user.nil?
         return unauthenticated unless user[:key] == env['HTTP_X_GAPTOOL_KEY']
-        if !ENV['GAPTOOL_CHECK_CLIENT_VERSION'].nil? && !check_version(settings.version_parsed, env['HTTP_X_GAPTOOL_VERSION'])
-          return invalid_version(settings.version, env['HTTP_X_GAPTOOL_VERSION'])
-        end
+        return invalid_version if !ENV['GAPTOOL_CHECK_CLIENT_VERSION'].nil? && !check_version
       end
     end
 

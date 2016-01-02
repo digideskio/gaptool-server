@@ -1,4 +1,3 @@
-# rubocop:disable Style/GlobalVars, Style/Semicolon
 require_relative 'test_helper'
 require 'json'
 require 'set'
@@ -8,10 +7,7 @@ redis = Gaptool.redis
 describe 'Test API' do
   before(:all) do
     ENV['DRYRUN'] = 'true'
-    ENV['GAPTOOL_CHECK_CLIENT_VERSION'] = 'true'
-    @version = File.read(File.realpath(
-                           File.join(File.dirname(__FILE__), '..', 'VERSION')
-    )).strip.split('.')[0..1].join('.')
+    ENV['GAPTOOL_CHECK_CLIENT_VERSION'] = nil
   end
 
   after(:all) do
@@ -22,7 +18,7 @@ describe 'Test API' do
   before(:each) do
     header 'X-GAPTOOL-USER', 'test'
     header 'X-GAPTOOL-KEY',  'test'
-    header 'X-GAPTOOL-VERSION', @version
+    header 'X-GAPTOOL-VERSION', version
     redis.flushall
     DH.useradd('test', 'test')
     $time = Time.now
@@ -61,6 +57,12 @@ describe 'Test API' do
 
   def expanded_runlist
     ['recipe[init]', 'recipe[myrecipe]']
+  end
+
+  def version
+    @v ||= File.read(
+      File.realpath(File.join(File.dirname(__FILE__), '..', 'VERSION')
+                   )).strip
   end
 
   it 'should return 200' do
@@ -361,6 +363,19 @@ describe 'Test API' do
       expect(last_response.status).to eq(200)
       exp_data = host_data.reject { |k, _v| k == 'terminable' }.merge('instance' => id,
                                                                       'chef_runlist' => expanded_runlist,
+                                                                      'apps' => [])
+      expect(JSON.parse(last_response.body)).to eq(exp_data)
+    end
+  end
+
+  it 'old client should have apps as strings' do
+    header 'X-GAPTOOL-VERSION', '0.7.0'
+    id = add_and_register_server['instance']
+    ["/instance/#{id}", "/host/testrole/testenv/#{id}", "/host/FAKE/FAKE/#{id}"].each do |url|
+      get url
+      expect(last_response.status).to eq(200)
+      exp_data = host_data.reject { |k, _v| k == 'terminable' }.merge('instance' => id,
+                                                                      'chef_runlist' => expanded_runlist,
                                                                       'apps' => '[]')
       expect(JSON.parse(last_response.body)).to eq(exp_data)
     end
@@ -383,7 +398,7 @@ describe 'Test API' do
     id4 = add_and_register_server(host_data.merge('role' => 'otherrole'))['instance']
     get '/hosts/testrole/testenv'
     expect(last_response.status).to eq(200)
-    d = host_data.reject { |k, _v| k == 'terminable' }.merge('chef_runlist' => expanded_runlist, 'apps' => '[]')
+    d = host_data.reject { |k, _v| k == 'terminable' }.merge('chef_runlist' => expanded_runlist, 'apps' => [])
     exp_data = [
       d.merge('instance' => id1),
       d.merge('instance' => id2)
@@ -401,9 +416,6 @@ describe 'Test API' do
   end
 
   it 'should return the server version' do
-    version = File.read(File.realpath(
-                          File.join(File.dirname(__FILE__), '..', 'VERSION')
-    )).strip
     get '/version'
     expect(last_response.status).to eq(200)
     expect(JSON.parse(last_response.body)).to eq('server_version' => version, 'api' => { 'v0' => '/' })
@@ -420,6 +432,7 @@ describe 'Test API' do
   end
 
   it 'should fail as client did not send version' do
+    ENV['GAPTOOL_CHECK_CLIENT_VERSION'] = '1'
     header 'X-GAPTOOL-VERSION', nil
     get '/version'
     expect(last_response.status).to eq(400)
@@ -433,5 +446,17 @@ describe 'Test API' do
     header 'X_GAPTOOL_VERSION', nil
     get '/version'
     expect(last_response.status).to eq(200)
+  end
+
+  it 'should reject old clients versions' do
+    ENV['GAPTOOL_CHECK_CLIENT_VERSION'] = '1'
+    srv = Versionomy.parse(version)
+    cl = Versionomy.create(major: srv.major, minor: srv.minor - 1, tiny: 0)
+    header 'X_GAPTOOL_VERSION', cl.to_s
+    get '/version'
+    expect(last_response.status).to eq(400)
+    resp = JSON.parse(last_response.body)
+    expect(resp['result']).to eq('error')
+    expect(resp['message']).to match(/^Invalid version/)
   end
 end
