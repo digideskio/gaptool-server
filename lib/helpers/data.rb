@@ -162,7 +162,7 @@ module Gaptool
 
     def self.server_chef_json(instance, env, data = {})
       data ||= {}
-      hd = get_server_data(instance, force_runlist: true)
+      hd = get_server_data(instance)
       return nil if hd.nil?
       {
         'apps' => hd['apps'],
