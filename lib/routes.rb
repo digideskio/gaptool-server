@@ -104,6 +104,8 @@ module Gaptool
       initkey = Gaptool::Data.get_config('initkey')
       jdata = Gaptool::Data.server_chef_json(instance_id, env,
                                              'identity': initkey)
+      # force runlist
+      jdata['run_list'] ||= Gaptool::Data.default_runlist
 
       erb :init, locals: {
         initkey: initkey,

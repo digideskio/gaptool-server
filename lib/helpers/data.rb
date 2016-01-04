@@ -9,7 +9,7 @@ module Gaptool
     end
 
     def self.init_recipe
-      'recipe[init]'
+      'role[base]'
     end
 
     def self.default_runlist
@@ -149,10 +149,6 @@ module Gaptool
       end
 
       rs['hidden'] = true if !rs['hidden'].nil? && rs['hidden'] == 'true'
-
-      if opts[:force_runlist] && rs['chef_runlist'].nil?
-        rs['chef_runlist'] = default_runlist
-      end
 
       rs.delete_if { |_k, v| v.nil? || (!!v != v && v.empty?) }
       rs['launch_time'] = rs['launch_time'].to_i if rs['launch_time']

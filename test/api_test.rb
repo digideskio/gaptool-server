@@ -56,7 +56,7 @@ describe 'Test API' do
   end
 
   def expanded_runlist
-    ['recipe[init]', 'recipe[myrecipe]']
+    ['role[base]', 'recipe[myrecipe]']
   end
 
   def version
@@ -190,14 +190,14 @@ describe 'Test API' do
   end
 
   it 'should remove default runlist' do
-    id = add_and_register_server(host_data.merge('chef_runlist' => ['recipe[init]']))['instance']
+    id = add_and_register_server(host_data.merge('chef_runlist' => ['role[base]']))['instance']
     get "/host/testrole/testenv/#{id}"
     resp = JSON.parse(last_response.body)
     expect(resp.keys).not_to include('chef_runlist')
   end
 
   it 'should remove default runlist from role' do
-    DH.save_role_data(host_data['role'], chef_runlist: ['recipe[init]'].to_json)
+    DH.save_role_data(host_data['role'], chef_runlist: ['role[base]'].to_json)
     id = add_and_register_server(host_data.reject { |k, _v| k == 'chef_runlist' })['instance']
     get "/host/testrole/testenv/#{id}"
     resp = JSON.parse(last_response.body)
@@ -278,6 +278,17 @@ describe 'Test API' do
   it 'should register the server' do
     add_and_register_server
     expect(last_response.body).to include("-E #{host_data['environment']}")
+  end
+
+  it 'should init with the default runlist' do
+    hdata = host_data.select{ |k, _v| k != 'chef_runlist' }
+    add_and_register_server(hdata)
+    expect(last_response.body).to include('"run_list":["role[base]"],')
+  end
+
+  it 'should init with the host runlist' do
+    add_and_register_server
+    expect(last_response.body).to include('"run_list":["role[base]","recipe[myrecipe]"],')
   end
 
   it 'should not find any hosts' do
@@ -390,7 +401,7 @@ describe 'Test API' do
       'migrate' => false,
       'role' => host_data['role'],
       'rollback' => false,
-      'run_list' => ['recipe[init]', 'recipe[myrecipe]']
+      'run_list' => expanded_runlist
     )
   end
 
