@@ -398,9 +398,7 @@ describe 'Test API' do
         'key' => 'test',
         'url' => 'localhost:666'
       },
-      'migrate' => false,
       'role' => host_data['role'],
-      'rollback' => false,
       'run_list' => expanded_runlist
     )
   end

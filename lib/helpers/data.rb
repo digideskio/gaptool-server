@@ -172,9 +172,7 @@ module Gaptool
           'key' => env['HTTP_X_GAPTOOL_KEY'],
           'url' => get_config('url')
         },
-        'migrate' => false,
         'role' => hd['role'],
-        'rollback' => false,
         'run_list' => hd['chef_runlist']
       }.merge(data)
     end
