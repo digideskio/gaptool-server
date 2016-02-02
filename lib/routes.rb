@@ -230,13 +230,6 @@ module Gaptool
       json Gaptool::Data.stringify_apps(Gaptool::Data.get_server_data(params[:instance]), client_version)
     end
 
-    get '/ssh/:role/:environment/:instance' do
-      data = Gaptool::Data.get_server_data params[:instance]
-      host = data['hostname']
-      key, pubkey = Gaptool::EC2.putkey(host)
-      json hostname: host, key: key, pubkey: pubkey
-    end
-
     get '/version' do
       version = settings.version
       json server_version: version, api: { v0: '/' }

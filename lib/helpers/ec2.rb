@@ -19,22 +19,6 @@ module Gaptool
                  ec2_endpoint: "ec2.#{zone}.amazonaws.com")
     end
 
-    def self.putkey(host)
-      return 'FAKEKEY', 'FAKEPUB' if ENV['DRYRUN']
-      key = OpenSSL::PKey::RSA.new 2048
-      pubkey = "#{key.ssh_type} #{[key.to_blob].pack('m0')} GAPTOOL_GENERATED_KEY"
-      ENV['SSH_AUTH_SOCK'] = ''
-      Net::SSH.start(host, 'admin',
-                     key_data: [Gaptool.redis.hget('config', 'gaptoolkey')],
-                     config: false, keys_only: true,
-                     paranoid: false) do |ssh|
-        ssh.exec! 'grep -v GAPTOOL_GENERATED_KEY ~/.ssh/authorized_keys > /tmp/pubkeys'
-        ssh.exec! "echo #{pubkey} >> /tmp/pubkeys"
-        ssh.exec! 'mv /tmp/pubkeys ~/.ssh/authorized_keys'
-      end
-      [key.to_pem, pubkey]
-    end
-
     def self.get_or_create_securitygroup(role, environment, zone, groupname = nil)
       return "sg-test#{SecureRandom.hex(2)}" if ENV['DRYRUN']
       configure_ec2 zone.chop
