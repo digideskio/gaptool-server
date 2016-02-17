@@ -129,7 +129,11 @@ module Gaptool
       configure_ec2 zone
       ec2 = AWS::EC2.new
       instance = ec2.instances[id]
-      instance.terminate
+      begin
+        instance.terminate
+      rescue AWS::Core::Resource::NotFound, AWS::EC2::Errors::InvalidInstanceID::NotFound
+        pass
+      end
     end
 
     def self.get_ec2_instance_data(zone, id)
