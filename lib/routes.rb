@@ -47,6 +47,10 @@ module Gaptool
         zone: data['zone']
       )
 
+      # TODO: I can call the /complete here, after piped the output of
+      # /register to bash, or in the bash template, at the end of
+      # /register itself.
+
       # Tag instance
       role = data['role']
       env = data['environment']
@@ -102,8 +106,7 @@ module Gaptool
       hostname = Gaptool::EC2.get_ec2_instance_data(data['zone'].chop, instance_id)[:hostname]
       Gaptool::Data.set_server_data_attr(instance_id, 'hostname', hostname)
       initkey = Gaptool::Data.get_config('initkey')
-      jdata = Gaptool::Data.server_chef_json(instance_id, env,
-                                             'identity': initkey)
+      jdata = Gaptool::Data.server_chef_json(instance_id, env, 'identity' => initkey)
       # force runlist
       jdata['run_list'] ||= Gaptool::Data.default_runlist
 
@@ -114,7 +117,25 @@ module Gaptool
         chef_environment: jdata['environment'],
         chef_version: Gaptool::Data.ensure_config('chef_version', '11.16.4'),
         json: jdata.to_json
+        # TODO: Add data parameters to call the /complete in the init
+        # template
       }
+    end
+
+    post '/complete/' do
+      # TODO: WIP here
+      data = JSON.parse request.body.read
+      data = require_parameters(%w(role zone environment secret), data)
+      args = [data['role'], data['environment'], data['secret']]
+      instance_id = Gaptool::Data.register_server(*args)
+
+      failmsg = "Can't register the completion: wrong secret or missing role/environment"
+      raise(Forbidden, failmsg) unless instance_id
+      # TODO: If the complete is arrived OK, notify OK
+      # TODO: If the complete is arrived FAILED ensure to kill the
+      # machine.
+      # TODO: If after 50 minutes we didn't received a COMPLETE OK, kill
+      # the machine
     end
 
     get '/hosts' do
