@@ -93,5 +93,8 @@ echo 'StrictHostKeyChecking no' > /root/.ssh/config
 
 git clone -b <%= chef_branch %> <%= chef_repo %> /root/ops
 echo '<%= json %>' > /root/init.json
+
+# TODO: add a loop check here if exitcode != 0
 chef-solo -c /root/ops/cookbooks/init.rb -j /root/init.json -E <%= chef_environment %> && \
     (rm /root/.ssh/id_rsa; userdel -r ubuntu; rm -rf /root/.ssh; rm -rf /root/ops)
+# TODO: call /complete endpoint with the return code above
