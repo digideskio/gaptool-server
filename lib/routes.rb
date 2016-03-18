@@ -99,7 +99,27 @@ module Gaptool
     put '/register' do
       data = JSON.parse request.body.read
       data = require_parameters(%w(role zone environment secret), data)
-      instance_id = Gaptool::Data.register_server data['role'], data['environment'], data['secret']
+
+      # TODO: Attention here:
+      # lib/helpers/data.rb#L83 deletes the keys:
+      # redis.multi do |m|
+      #   m.hdel("instance:#{instance}", 'secret')
+      #   m.hdel("instance:#{instance}", 'registered')
+      #   m.srem('instances:unregistered', instance)
+      #   m.del(key)
+      opts = { mark_as: 'in_progress' }
+      args = [data['role'], data['environment'], data['secret'], opts]
+      instance_id = Gaptool::Data.register_server(*args)
+      # TODO: Attention
+      # We need to leave the secret in place, mark the machine as 'in
+      # progress', then use the secret as a parameter for the /complete
+      # call so we can validate its that machine. It will be during the
+      # handling of the /complete endpoint that we will remove the
+      # secret.
+      # Then it's simply a matter of writing a rake task
+      # (executed via cron) that every 15 min or so checks for the
+      # machines 'in progress' or 'not yet registered' that are up for
+      # more than $threshold minutes.
 
       fail Forbidden, "Can't register instance: wrong secret or missing role/environment" unless instance_id
 
